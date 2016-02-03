@@ -32,20 +32,24 @@ int main(int, char const**)
     sfray::Map worldMap;
     worldMap.CreateFromBSP(MAP_WIDTH, MAP_HEIGHT);
 
+    // Create the raycaster instance
     sfray::Raycaster raycaster;
-    worldMap.LoadTexture(1, resourcePath() + "stonewall.png");
-    worldMap.LoadTexture(2, resourcePath() + "stonewall3.png");
-    worldMap.LoadTexture(3, resourcePath() + "stonewall4.png");
-//    worldMap.LoadTexture(0, resourcePath() + "floor.png");
-//    worldMap.LoadTexture(-1, resourcePath() + "floor2.png");
+
+    // Load textures into the map object
+    worldMap.LoadTexture(1, resourcePath() + "stonewall.png");  // 128x128 version
+    worldMap.LoadTexture(2, resourcePath() + "stonewall3.png");  // 128x128 version
+    worldMap.LoadTexture(3, resourcePath() + "stonewall4.png");  // 128x128 version
+    worldMap.LoadTexture(0, resourcePath() + "floor.png");  // 128x128 version
+    worldMap.LoadTexture(-1, resourcePath() + "floor2.png");  // 128x128 version
     worldMap.LoadTexture(4, resourcePath() + "pillar.png");
     worldMap.LoadTexture(5, resourcePath() + "barrel.png");
 
-//	worldMap.LoadTexture(1, resourcePath() + "stonewall_64.png");
-//    worldMap.LoadTexture(2, resourcePath() + "stonewall3_64.png");
-//    worldMap.LoadTexture(3, resourcePath() + "stonewall4_64.png");
-    worldMap.LoadTexture(0, resourcePath() + "floor_64.png");
-    worldMap.LoadTexture(-1, resourcePath() + "floor2_64.png");
+    // These are lower-quality (and size) versions of the wall and floor textures.
+//	worldMap.LoadTexture(1, resourcePath() + "stonewall_64.png");   // 64x64 version
+//    worldMap.LoadTexture(2, resourcePath() + "stonewall3_64.png");   // 64x64 version
+//    worldMap.LoadTexture(3, resourcePath() + "stonewall4_64.png");   // 64x64 version
+//    worldMap.LoadTexture(0, resourcePath() + "floor_64.png");   // 64x64 version
+//    worldMap.LoadTexture(-1, resourcePath() + "floor2_64.png");   // 64x64 version
 
     for (unsigned int i = 0; i < worldMap.Rooms.size(); ++i){
         sfray::Entity* ent = new sfray::Entity();
@@ -55,14 +59,13 @@ int main(int, char const**)
         worldMap.addEntity(ent);
     }
 
+    // Set the map for the raycaster
     raycaster.setMap(worldMap);
 
+    // Set the raycasters' drawing size
     raycaster.setSize(320, 240);
-//	raycaster.setCeilingRenderMethod(sfray::Ceiling_None);
-//	raycaster.setFloorRenderMethod(sfray::Floor_None);
-//	raycaster.setWallRenderMethod(sfray::Wall_Color);
-//	raycaster.setEntityRenderMethod(sfray::Entity_None);
 
+    // Set up the camera
     sfray::Camera camera;
     camera.setPosition(worldMap.Rooms[0].x + 1, worldMap.Rooms[0].y + 1);
     camera.setDirectionInDegrees(0);
