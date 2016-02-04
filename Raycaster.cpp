@@ -61,13 +61,23 @@ namespace sfray {
         
 		int times = 0;
 	
-		// update background
+		/* FIRST STEP:
+		 * The background. This is can be nothing, a color, or the texture
+		 * created via the floor casting later on.
+		 *
+		 * If either the floor or ceiling rendering method is "Texture",
+         * we start by cleaning up the texture that fits across the entire
+         * background.
+         */
 		if (mFloorRenderMethod == Floor_Texture || mCeilingRenderMethod == Ceiling_Texture){
 			
 			for (unsigned int i = 3; i < mGfxWidth * mGfxHeight * 4; i += 4){
 				mFloorcastingPixels[i] = 0;
 			}	
 		}
+        /* If we aren't texturing the floor, then we don't do the raycasting
+         * later on, and instead we go ahead and draw our colored floor.
+         */
 		if (mFloorRenderMethod != Floor_Texture) {
 			sf::RectangleShape floorshape;
 			floorshape.setFillColor(mFloorRenderColor);
@@ -75,6 +85,8 @@ namespace sfray {
 			floorshape.setPosition(0, mGfxHeight / 2);
 			window.draw(floorshape);							
 		}
+        /* The ceiling works in the same way as the floor.
+         */
 		if (mCeilingRenderMethod != Ceiling_Texture){
 			sf::RectangleShape ceilshape;
 			ceilshape.setFillColor(mCeilingRenderColor);
@@ -82,8 +94,24 @@ namespace sfray {
 			ceilshape.setPosition(0, 0);
 			window.draw(ceilshape);
 		}
-		
+
+        /* SECOND STEP:
+         * Raycasting.
+         * Now we start doing our raycasting, taking vertical slices across
+         * the width of our drawing area.
+         *
+         * For each slice, we cast a ray from the camera to find out if and
+         * where it hits a wall. We then calculate the distance and
+         * perspective for that part of the wall. If we are using a texture,
+         * we use this to figure out what part of the texture to draw. For
+         * both textured and colored walls, we also figure out how "big" to
+         * draw this slice of the wall based on distance away.
+         */
 		for (unsigned int x = 0; x < mGfxWidth; ++x){
+
+            /* We start by figuring out where our camera is located
+             * and where it is looking.
+             */
 			float cameraX = 2 * x / float(mGfxWidth) - 1;
 			
 			float rayPosX = camera.getPosition().x;
@@ -109,7 +137,7 @@ namespace sfray {
 			int stepX = 0;
 			int stepY = 0;
 			
-			int hit = 0; // was therre a wall hit?
+			int hit = 0;
 			int side;
 			
 			if (rayDirX < 0){
@@ -190,9 +218,15 @@ namespace sfray {
 			{
 				texX = TEXTURE_WIDTH - texX - 1;
 			}
-			
-			if (mWallRenderMethod == Wall_Texture){
 
+            /* Draw the slice of wall to the screen.
+             *
+             * Use a Quad sf::VertexArray to do the drawing.
+             * This gives more flexibility and keeps from having
+             * to draw each pixel one at a time, which boosts our
+             * performance.
+             */
+			if (mWallRenderMethod == Wall_Texture){
 				sf::VertexArray slice(sf::Quads, 4);
 				slice[0].position = sf::Vector2f(x, drawStart);
 				slice[1].position = sf::Vector2f(x+1, drawStart);
@@ -229,348 +263,375 @@ namespace sfray {
 				window.draw(slice);
 			}
 			
-			
-			// SET THE ZBUFFER FOR THE SPRITE CASTING
+			// we save this for later. To be used for drawing things
+            // like sprites.
 			mZBuffer[x] = perpWallDist; // perpendicular distance is used
 			
 			++times;
-			// FLOOR casting
-			float floorXWall;
-			float floorYWall;
-			
-			// 4 different wall directions possible
-			if (side == 0 && rayDirX > 0){
-				floorXWall = mapX;
-				floorYWall = mapY + wallX;
-			}
-			else if (side == 0 && rayDirX < 0){
-				floorXWall = mapX + 1.0;
-				floorYWall = mapY + wallX;
-			}
-			else if (side == 1 && rayDirY > 0){
-				floorXWall = mapX + wallX;
-				floorYWall = mapY;
-			}
-			else{
-				floorXWall = mapX + wallX;
-				floorYWall = mapY + 1.0;
-			}
-			
-			float distWall;
-			float distPlayer;
-			float currentDist;
-			
-			distWall = perpWallDist;
-			distPlayer = 0.0;
-			
-			if (drawEnd < 0){
-				drawEnd = mGfxHeight;
-			}
-			
-			
-			if ((mFloorRenderMethod == Floor_Texture || mCeilingRenderMethod == Ceiling_Texture) && camera.moved == true)
-			{
-				for (unsigned int y = drawEnd + 1; y < mGfxHeight; ++y){						
-					currentDist = mHeightMap[y];						
-					
-					float weight = (currentDist - distPlayer) / (distWall - distPlayer);
-					
-					float currentFloorX = weight * floorXWall + (1.0 - weight) * camera.getPosition().x;
-					float currentFloorY = weight * floorYWall + (1.0 - weight) * camera.getPosition().y;
-					
-					sfray::MapTile tile = mMap.GetTile(int(currentFloorX), int(currentFloorY));
-					
-					int floorTextureWidth = tile.TextureWidth;
-					int floorTextureHeight = tile.TextureHeight;
-					
-					int floorTexX = int(currentFloorX * floorTextureWidth) % floorTextureWidth;
-					int floorTexY = int(currentFloorY * floorTextureHeight) % floorTextureHeight;
-														
-					sf::Color pix = mMap.GetPixelFromTexture(tile.TextureIndex, floorTexX, floorTexY);
-					
-					if (mFloorRenderMethod == Floor_Texture){
-						unsigned int index = (y * (mGfxWidth * 4)) + (x*4);
-						mFloorcastingPixels[index] = pix.r;
-						mFloorcastingPixels[index+1] = pix.g;
-						mFloorcastingPixels[index+2] = pix.b;
-						mFloorcastingPixels[index+3] = pix.a;
-					}
-					
-					if (mCeilingRenderMethod == Ceiling_Texture){
-						unsigned int index2 = ((mGfxHeight-y) * (mGfxWidth * 4)) + (x*4);
-						mFloorcastingPixels[index2] = pix.r / 2;
-						mFloorcastingPixels[index2+1] = pix.g / 2;
-						mFloorcastingPixels[index2+2] = pix.b / 2;
-						mFloorcastingPixels[index2+3] = pix.a;
-					}
-				}	
-				
-			}
-		}
-		if (camera.moved && (mFloorRenderMethod == Floor_Texture || mCeilingRenderMethod == Ceiling_Texture)){
-			mFloorcastingTexture.update(mFloorcastingPixels);	
-		}
-		if (mFloorRenderMethod == Floor_Texture || mCeilingRenderMethod == Ceiling_Texture){
-			window.draw(mFloorcastingSprite);	
-		}
-		
-		// SPRITE CASTING
-		if (mEntityRenderMethod != Entity_None){
-			
-			// sort sprites from far to close
-			std::vector<sfray::Entity*> sprites = mMap.getEntities();
-			std::vector<int> mSpriteOrder;
-			std::vector<float> mSpriteDistance;
-			for (unsigned int i = 0; i < sprites.size(); ++i){
-				float dist = ((camera.getPosition().x - sprites[i]->getPosition().x) * (camera.getPosition().x - sprites[i]->getPosition().x) + (camera.getPosition().y - sprites[i]->getPosition().y) * (camera.getPosition().y - sprites[i]->getPosition().y));
-				
-				if (dist > mMaxObjectRenderDistance){
-					continue;
-				}
-				mSpriteOrder.push_back(i);
-				mSpriteDistance.push_back(dist); // sqrt not taken, unneeded
-			}
-			combSort(mSpriteOrder, mSpriteDistance, mSpriteOrder.size());
-			
-			// after sorting the sprites, do the projection and draw them
-			for (unsigned int i = 0; i < mSpriteOrder.size(); ++i){
-				// translate the sprite position to relative to camera
-				float spriteX = sprites[mSpriteOrder[i]]->getPosition().x - camera.getPosition().x;
-				float spriteY = sprites[mSpriteOrder[i]]->getPosition().y - camera.getPosition().y;					
-				
-				// transform sprite with the inverse camera matrix
-				float invDet = 1.0 / (camera.getPlane().x * camera.getDirection().y - camera.getDirection().x * camera.getPlane().y); // require for correct matrix multiplication.
-				
-				float transformX = invDet * (camera.getDirection().y * spriteX - camera.getDirection().x * spriteY);
-				float transformY = invDet * (-camera.getPlane().y * spriteX + camera.getPlane().x * spriteY); // this is actually the depth inside the screen, that what Z is in the 3D
-				
-				// we can't see this object because of rotation
-				if (transformY < 0){
-					continue;
-				}
-				
-				int spriteScreenX = int(( mGfxWidth / 2) * (1 + transformX / transformY));
-				
-				// calculate height of the sprite on screen
-				int spriteHeight = abs(int(mGfxHeight / (transformY))); // using <transformY> instead of the real distance prevents fisheye
-				// calculate lowest and highest pixel to fill in current stripe
-				int drawStartY = -spriteHeight / 2 + mGfxHeight / 2;
-				int drawEndY = spriteHeight / 2 + mGfxHeight / 2;
-				
-				// calculate width of the sprite
-				int spriteWidth = abs(int(mGfxHeight / (transformY)));
-				int drawStartX = -spriteWidth / 2 + spriteScreenX;
-				int drawEndX = spriteWidth / 2 + spriteScreenX;
 
-				int drawWidth = drawEndX - drawStartX;
-				int drawOrigStartX = drawStartX;
-				
-				// draws vertical slices, iterating through x.
-				sf::Texture spriteTexture = mMap.GetTexture(sprites[mSpriteOrder[i]]->getTextureUID());
-				int TEXTURE_WIDTH = spriteTexture.getSize().x;
-				int TEXTURE_HEIGHT = spriteTexture.getSize().y;
-				
-				int spriteLeft = 0;
-				int spriteRight = TEXTURE_WIDTH;
-				int spriteTop = 0;
-				int spriteBottom = TEXTURE_HEIGHT;
-				
-				int width = (int)mGfxWidth;
-				
-				if (drawStartX > width || drawEndX < 0){
-					continue;
-				}
-				
-				for (int stripe = drawStartX; stripe <= drawEndX; ++stripe){				
-					if (stripe < 0){
-						drawStartX += 1;
-						continue;
-					}
-					// are other walls in front
-					if (transformY > mZBuffer[stripe]){
-						drawStartX += 1;
-						continue;
-					}
-					
-					break;
-				}
-				
-				int newWidth = drawEndX - drawStartX;
-				
-				float d = (float)drawWidth / (float)newWidth;
-				
-				spriteLeft = TEXTURE_WIDTH - (float)TEXTURE_WIDTH / d;
-				
-				for (int stripe = drawEndX; stripe > drawStartX; --stripe){
-					if (stripe > width){
-						drawEndX -= 1;
-						continue;
-					}
-					
-					if (transformY > mZBuffer[stripe]){
-						drawEndX -= 1;
-						continue;
-					}
-					
-					break;
-				}
-				
-				newWidth = drawEndX - drawOrigStartX;
-				d = (float)drawWidth / (float)newWidth;
-				
-				spriteRight = (float)TEXTURE_WIDTH / d;
-				
-				sf::VertexArray spriteQuad(sf::Quads, 4);
-				
-				spriteQuad[0].position = sf::Vector2f(drawStartX, drawStartY);
-				spriteQuad[1].position = sf::Vector2f(drawEndX, drawStartY);
-				spriteQuad[2].position = sf::Vector2f(drawEndX, drawEndY);
-				spriteQuad[3].position = sf::Vector2f(drawStartX, drawEndY);
-				
-				spriteQuad[0].texCoords = sf::Vector2f(spriteLeft, spriteTop);
-				spriteQuad[1].texCoords = sf::Vector2f(spriteRight, spriteTop);
-				spriteQuad[2].texCoords = sf::Vector2f(spriteRight, spriteBottom);
-				spriteQuad[3].texCoords = sf::Vector2f(spriteLeft, spriteBottom);
-				
-				window.draw(spriteQuad, &spriteTexture);
-				
-	//			for (int stripe = drawStartX; stripe < drawEndX; stripe++){
-	//				
-	//				int texX = int(256 * (stripe - (-spriteWidth / 2 + spriteScreenX)) * TEXTURE_WIDTH / spriteWidth) / 256;
-	//				if (transformY > 0 && stripe > 0 && stripe < mGfxHeight && transformY < mZBuffer[stripe]){
-	//					sf::Sprite slice = sf::Sprite(spriteTexture,
-	//												  sf::IntRect(texX,0,1,TEXTURE_HEIGHT));
-	//					float sc = float(drawEndY - drawStartY) / TEXTURE_HEIGHT;
-	//					slice.setScale(1, sc);
-	//					slice.setPosition(stripe, drawStartY);
-	//					window.draw(slice);
-	//				}
-	//			}
 
-			}
-		}
+            /* THIRD STEP
+             * Floor and ceiling.
+             *
+             * This is where we take the biggest hit in performance.
+             *
+             * For a long time, games would draw a flat color instead
+             * of a texture, because it is not as simple as drawing the
+             * slices of walls. Instead, each point on the floor has to be
+             * mapped to part of a texture, which is a lot of math calculations.
+             * Then, each pixel has to be individually drawn to the screen, which
+             * is also a major performance hit.
+             *
+             * For each slice, we need to figure out (remember from before) where
+             * the wall (if there was one) starts and ends. This way, we can draw
+             * floor and ceiling below and above it, respectively.
+             */
+            float floorXWall;
+            float floorYWall;
+
+            // 4 different wall directions possible
+            if (side == 0 && rayDirX > 0){
+                floorXWall = mapX;
+                floorYWall = mapY + wallX;
+            }
+            else if (side == 0 && rayDirX < 0){
+                floorXWall = mapX + 1.0;
+                floorYWall = mapY + wallX;
+            }
+            else if (side == 1 && rayDirY > 0){
+                floorXWall = mapX + wallX;
+                floorYWall = mapY;
+            }
+            else{
+                floorXWall = mapX + wallX;
+                floorYWall = mapY + 1.0;
+            }
+
+            float distWall;
+            float distPlayer;
+            float currentDist;
+
+            distWall = perpWallDist;
+            distPlayer = 0.0;
+
+            if (drawEnd < 0){
+                drawEnd = mGfxHeight;
+            }
+
+            /* We only do all of this work if a few conditions are met:
+             *
+             * 1) We have to be drawing the textures for either the floor or ceiling.
+             *    if they're just the color, then we have no need to be here.
+             * 2) If the camera has moved since last time. If the camera has not moved
+             *    then we do not need to redo all of our math and drawing. We can just
+             *    redraw what we had from before.
+             *
+             * THIS IS VERY IMPORTANT FOR PERFORMANCE.
+             */
+            if ((mFloorRenderMethod == Floor_Texture || mCeilingRenderMethod == Ceiling_Texture) && camera.moved == true)
+            {
+                for (unsigned int y = drawEnd + 1; y < mGfxHeight; ++y){
+                    currentDist = mHeightMap[y];
+
+                    float weight = (currentDist - distPlayer) / (distWall - distPlayer);
+
+                    float currentFloorX = weight * floorXWall + (1.0 - weight) * camera.getPosition().x;
+                    float currentFloorY = weight * floorYWall + (1.0 - weight) * camera.getPosition().y;
+
+                    sfray::MapTile tile = mMap.GetTile(int(currentFloorX), int(currentFloorY));
+
+                    int floorTextureWidth = tile.TextureWidth;
+                    int floorTextureHeight = tile.TextureHeight;
+
+                    int floorTexX = int(currentFloorX * floorTextureWidth) % floorTextureWidth;
+                    int floorTexY = int(currentFloorY * floorTextureHeight) % floorTextureHeight;
+
+                    sf::Color pix = mMap.GetPixelFromTexture(tile.TextureIndex, floorTexX, floorTexY);
+
+                    if (mFloorRenderMethod == Floor_Texture){
+                        unsigned int index = (y * (mGfxWidth * 4)) + (x*4);
+                        mFloorcastingPixels[index] = pix.r;
+                        mFloorcastingPixels[index+1] = pix.g;
+                        mFloorcastingPixels[index+2] = pix.b;
+                        mFloorcastingPixels[index+3] = pix.a;
+                    }
+
+                    if (mCeilingRenderMethod == Ceiling_Texture){
+                        unsigned int index2 = ((mGfxHeight-y) * (mGfxWidth * 4)) + (x*4);
+                        mFloorcastingPixels[index2] = pix.r / 2;
+                        mFloorcastingPixels[index2+1] = pix.g / 2;
+                        mFloorcastingPixels[index2+2] = pix.b / 2;
+                        mFloorcastingPixels[index2+3] = pix.a;
+                    }
+                }
+            }
+        }
+        /* Again, check if camera has moved and if we are drawing textures before
+         * updating the background texture.
+         */
+        if (camera.moved && (mFloorRenderMethod == Floor_Texture || mCeilingRenderMethod == Ceiling_Texture)){
+            mFloorcastingTexture.update(mFloorcastingPixels);
+        }
+
+        /* If we ARE drawing the textures, then we draw the background,
+         * every time, whether or not the player has moved.
+         */
+        if (mFloorRenderMethod == Floor_Texture || mCeilingRenderMethod == Ceiling_Texture){
+            window.draw(mFloorcastingSprite);
+        }
+
+        /* STEP, THE LAST
+         * In which we draw our sprite entities.
+         * These are supposed to be drawn above the floor; however,
+         * we do have to check and make sure they are not too far away
+         * or obstructed by walls or other objects.
+         */
+        if (mEntityRenderMethod != Entity_None){
+
+            /* Start by sorting all of the entities by distance
+             * to the camera.
+             */
+            std::vector<sfray::Entity*> sprites = mMap.getEntities();
+            std::vector<int> mSpriteOrder;
+            std::vector<float> mSpriteDistance;
+            for (unsigned int i = 0; i < sprites.size(); ++i){
+                float dist = ((camera.getPosition().x - sprites[i]->getPosition().x) * (camera.getPosition().x - sprites[i]->getPosition().x) + (camera.getPosition().y - sprites[i]->getPosition().y) * (camera.getPosition().y - sprites[i]->getPosition().y));
+
+                if (dist > mMaxObjectRenderDistance){
+                    continue;
+                }
+                mSpriteOrder.push_back(i);
+                mSpriteDistance.push_back(dist); // sqrt not taken, unneeded
+            }
+            combSort(mSpriteOrder, mSpriteDistance, mSpriteOrder.size());
+
+            // after sorting the sprites, do the projection and draw them
+            for (unsigned int i = 0; i < mSpriteOrder.size(); ++i){
+                // translate the sprite position to relative to camera
+                float spriteX = sprites[mSpriteOrder[i]]->getPosition().x - camera.getPosition().x;
+                float spriteY = sprites[mSpriteOrder[i]]->getPosition().y - camera.getPosition().y;
+
+                // transform sprite with the inverse camera matrix
+                float invDet = 1.0 / (camera.getPlane().x * camera.getDirection().y - camera.getDirection().x * camera.getPlane().y); // require for correct matrix multiplication.
+
+                float transformX = invDet * (camera.getDirection().y * spriteX - camera.getDirection().x * spriteY);
+                float transformY = invDet * (-camera.getPlane().y * spriteX + camera.getPlane().x * spriteY); // this is actually the depth inside the screen, that what Z is in the 3D
+
+                /* If we cannot see this object because of rotation,
+                 * then we skip it and move on.
+                 */
+                if (transformY < 0){
+                    continue;
+                }
+
+                int spriteScreenX = int(( mGfxWidth / 2) * (1 + transformX / transformY));
+
+                // calculate height of the sprite on screen
+                int spriteHeight = abs(int(mGfxHeight / (transformY))); // using <transformY> instead of the real distance prevents fisheye
+                // calculate lowest and highest pixel to fill in current stripe
+                int drawStartY = -spriteHeight / 2 + mGfxHeight / 2;
+                int drawEndY = spriteHeight / 2 + mGfxHeight / 2;
+
+                // calculate width of the sprite
+                int spriteWidth = abs(int(mGfxHeight / (transformY)));
+                int drawStartX = -spriteWidth / 2 + spriteScreenX;
+                int drawEndX = spriteWidth / 2 + spriteScreenX;
+
+                int drawWidth = drawEndX - drawStartX;
+                int drawOrigStartX = drawStartX;
+
+                // draws vertical slices, iterating through x.
+                sf::Texture spriteTexture = mMap.GetTexture(sprites[mSpriteOrder[i]]->getTextureUID());
+                int TEXTURE_WIDTH = spriteTexture.getSize().x;
+                int TEXTURE_HEIGHT = spriteTexture.getSize().y;
+
+                int spriteLeft = 0;
+                int spriteRight = TEXTURE_WIDTH;
+                int spriteTop = 0;
+                int spriteBottom = TEXTURE_HEIGHT;
+
+                int width = (int)mGfxWidth;
+
+                if (drawStartX > width || drawEndX < 0){
+                    continue;
+                }
+
+                for (int stripe = drawStartX; stripe <= drawEndX; ++stripe){
+                    if (stripe < 0){
+                        drawStartX += 1;
+                        continue;
+                    }
+                    // are other walls in front
+                    if (transformY > mZBuffer[stripe]){
+                        drawStartX += 1;
+                        continue;
+                    }
+
+                    break;
+                }
+
+                int newWidth = drawEndX - drawStartX;
+
+                float d = (float)drawWidth / (float)newWidth;
+
+                spriteLeft = TEXTURE_WIDTH - (float)TEXTURE_WIDTH / d;
+
+                for (int stripe = drawEndX; stripe > drawStartX; --stripe){
+                    if (stripe > width){
+                        drawEndX -= 1;
+                        continue;
+                    }
+
+                    if (transformY > mZBuffer[stripe]){
+                        drawEndX -= 1;
+                        continue;
+                    }
+
+                    break;
+                }
+
+                newWidth = drawEndX - drawOrigStartX;
+                d = (float)drawWidth / (float)newWidth;
+
+                spriteRight = (float)TEXTURE_WIDTH / d;
+
+                sf::VertexArray spriteQuad(sf::Quads, 4);
+
+                spriteQuad[0].position = sf::Vector2f(drawStartX, drawStartY);
+                spriteQuad[1].position = sf::Vector2f(drawEndX, drawStartY);
+                spriteQuad[2].position = sf::Vector2f(drawEndX, drawEndY);
+                spriteQuad[3].position = sf::Vector2f(drawStartX, drawEndY);
+
+                spriteQuad[0].texCoords = sf::Vector2f(spriteLeft, spriteTop);
+                spriteQuad[1].texCoords = sf::Vector2f(spriteRight, spriteTop);
+                spriteQuad[2].texCoords = sf::Vector2f(spriteRight, spriteBottom);
+                spriteQuad[3].texCoords = sf::Vector2f(spriteLeft, spriteBottom);
+
+                window.draw(spriteQuad, &spriteTexture);
+            }
+        }
     }
-    
-	WallRenderMethod Raycaster::getWallRenderMethod(){
-		return mWallRenderMethod;
-	}
-	
-	void Raycaster::setWallRenderMethod(WallRenderMethod method){
-		mWallRenderMethod = method;
-	}
-	
-	FloorRenderMethod Raycaster::getFloorRenderMethod(){
-		return mFloorRenderMethod;
-	}
-	
-	void Raycaster::setFloorRenderMethod(FloorRenderMethod method){
-		mFloorRenderMethod = method;
-	}	
-	
-	CeilingRenderMethod Raycaster::getCeilingRenderMethod(){
-		return mCeilingRenderMethod;
-	}
-	
-	void Raycaster::setCeilingRenderMethod(CeilingRenderMethod method){
-		mCeilingRenderMethod = method;
-	}
-	
-	EntityRenderMethod Raycaster::getEntityRenderMethod(){
-		return mEntityRenderMethod;
-	}
-	
-	void Raycaster::setEntityRenderMethod(EntityRenderMethod method){
-		mEntityRenderMethod = method;
-	}
-	
-	void Raycaster::updateForSize(){
-		// distances
-		mHeightMap.clear();
-		for (unsigned int i = 0; i < mGfxHeight; ++i){
-			mHeightMap.push_back(mGfxHeight / (2.0 * i - mGfxHeight));
-		}
-		
-		if (mFloorcastingPixels != nullptr){			
-			delete mFloorcastingPixels;
-			mFloorcastingPixels = nullptr;
-		}
-		
-		mFloorcastingPixels = new sf::Uint8[mGfxWidth * mGfxHeight * 4];
-		mFloorcastingTexture.create(mGfxWidth, mGfxHeight);		
-		mFloorcastingSprite = sf::Sprite(mFloorcastingTexture);
-		
-		mFloorcastingSprite.setPosition(0,0);
-		
-		mZBuffer.clear();
-		for (unsigned int i = 0; i < mGfxWidth; ++i){
-			mZBuffer.push_back(0);
-		}
-	}
-	
-	void Raycaster::setWidth(unsigned int amount){
-		mGfxWidth = amount;
-		updateForSize();
-	}
-	
-	void Raycaster::setHeight(unsigned int amount){
-		mGfxHeight = amount;
-		updateForSize();
-	}
-	
-	void Raycaster::setSize(unsigned int width_, unsigned int height_){
-		mGfxWidth = width_;
-		mGfxHeight = height_;
-		updateForSize();
-	}
-	
-	// sorting algorithm
-	void Raycaster::combSort(std::vector<int>& order, std::vector<float>& dist, int amount){
-		//std::cout << "start sort" << std::endl;
-		
-		int gap = amount;
-		bool swapped = false;
-		while (gap > 1 || swapped){
-			// shrink factor 1.3
-			gap = (gap * 10) / 13;
-			if (gap == 9 || gap == 10){
-				gap = 11;
-			}
-			if (gap < 1){
-				gap = 1;
-			}
-			swapped = false;
-			for (int i = 0; i < amount - gap; ++i){
-				int j = i + gap;
-				if (dist[i] < dist[j]){
-					std::swap(dist[i],dist[j]);
-					std::swap(order[i],order[j]);
-					swapped = true;
-				}
-			}
-		}
-		
-		//std::cout << "end sort" << std::endl;
-	}
-	
-	float Raycaster::getMaxObjectRenderDistance(){
-		return mMaxObjectRenderDistance;
-	}
-	
-	void Raycaster::setMaxObjectRenderDistance(float distance){
-		mMaxObjectRenderDistance = distance;
-	}
-	
-	void Raycaster::setWallRenderColor(const sf::Color& color){
-		mWallRenderColor = color;
-	}
-	
-	void Raycaster::setCeilingRenderColor(const sf::Color& color){
-		mCeilingRenderColor = color;
-	}
-	
-	void Raycaster::setFloorRenderColor(const sf::Color& color){
-		mFloorRenderColor = color;
-	}
-	
+
+    WallRenderMethod Raycaster::getWallRenderMethod(){
+        return mWallRenderMethod;
+    }
+
+    void Raycaster::setWallRenderMethod(WallRenderMethod method){
+        mWallRenderMethod = method;
+    }
+
+    FloorRenderMethod Raycaster::getFloorRenderMethod(){
+        return mFloorRenderMethod;
+    }
+
+    void Raycaster::setFloorRenderMethod(FloorRenderMethod method){
+        mFloorRenderMethod = method;
+    }
+
+    CeilingRenderMethod Raycaster::getCeilingRenderMethod(){
+        return mCeilingRenderMethod;
+    }
+
+    void Raycaster::setCeilingRenderMethod(CeilingRenderMethod method){
+        mCeilingRenderMethod = method;
+    }
+
+    EntityRenderMethod Raycaster::getEntityRenderMethod(){
+        return mEntityRenderMethod;
+    }
+
+    void Raycaster::setEntityRenderMethod(EntityRenderMethod method){
+        mEntityRenderMethod = method;
+    }
+
+    void Raycaster::updateForSize(){
+        // distances
+        mHeightMap.clear();
+        for (unsigned int i = 0; i < mGfxHeight; ++i){
+            mHeightMap.push_back(mGfxHeight / (2.0 * i - mGfxHeight));
+        }
+
+        if (mFloorcastingPixels != nullptr){
+            delete mFloorcastingPixels;
+            mFloorcastingPixels = nullptr;
+        }
+
+        mFloorcastingPixels = new sf::Uint8[mGfxWidth * mGfxHeight * 4];
+        mFloorcastingTexture.create(mGfxWidth, mGfxHeight);
+        mFloorcastingSprite = sf::Sprite(mFloorcastingTexture);
+
+        mFloorcastingSprite.setPosition(0,0);
+
+        mZBuffer.clear();
+        for (unsigned int i = 0; i < mGfxWidth; ++i){
+            mZBuffer.push_back(0);
+        }
+    }
+
+    void Raycaster::setWidth(unsigned int amount){
+        mGfxWidth = amount;
+        updateForSize();
+    }
+
+    void Raycaster::setHeight(unsigned int amount){
+        mGfxHeight = amount;
+        updateForSize();
+    }
+
+    void Raycaster::setSize(unsigned int width_, unsigned int height_){
+        mGfxWidth = width_;
+        mGfxHeight = height_;
+        updateForSize();
+    }
+
+    // sorting algorithm
+    void Raycaster::combSort(std::vector<int>& order, std::vector<float>& dist, int amount){
+        //std::cout << "start sort" << std::endl;
+
+        int gap = amount;
+        bool swapped = false;
+        while (gap > 1 || swapped){
+            // shrink factor 1.3
+            gap = (gap * 10) / 13;
+            if (gap == 9 || gap == 10){
+                gap = 11;
+            }
+            if (gap < 1){
+                gap = 1;
+            }
+            swapped = false;
+            for (int i = 0; i < amount - gap; ++i){
+                int j = i + gap;
+                if (dist[i] < dist[j]){
+                    std::swap(dist[i],dist[j]);
+                    std::swap(order[i],order[j]);
+                    swapped = true;
+                }
+            }
+        }
+
+        //std::cout << "end sort" << std::endl;
+    }
+
+    float Raycaster::getMaxObjectRenderDistance(){
+        return mMaxObjectRenderDistance;
+    }
+
+    void Raycaster::setMaxObjectRenderDistance(float distance){
+        mMaxObjectRenderDistance = distance;
+    }
+
+    void Raycaster::setWallRenderColor(const sf::Color& color){
+        mWallRenderColor = color;
+    }
+
+    void Raycaster::setCeilingRenderColor(const sf::Color& color){
+        mCeilingRenderColor = color;
+    }
+
+    void Raycaster::setFloorRenderColor(const sf::Color& color){
+        mFloorRenderColor = color;
+    }
+
 }// end of NS
 
