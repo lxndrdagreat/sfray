@@ -20,10 +20,6 @@
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
 
-// GFX SETTINGS
-int gfx_width = WINDOW_WIDTH;
-int gfx_height = WINDOW_HEIGHT;
-
 int main(int, char const**)
 {
     srand(1); // using a seed to help debug changes
@@ -34,9 +30,6 @@ int main(int, char const**)
     sfray::GenerationResults builtBSP = sfray::makeBSP(MAP_WIDTH, MAP_HEIGHT);
     worldMap.Rooms = builtBSP.rooms;
     worldMap.SetDataFromIntArray(builtBSP.mapArray);
-
-    // Create the raycaster instance
-    sfray::Raycaster raycaster;
 
     // Load textures into the map object
     worldMap.LoadTexture(1, resourcePath() + "stonewall.png");  // 128x128 version
@@ -54,6 +47,7 @@ int main(int, char const**)
 //    worldMap.LoadTexture(0, resourcePath() + "floor_64.png");   // 64x64 version
 //    worldMap.LoadTexture(-1, resourcePath() + "floor2_64.png");   // 64x64 version
 
+    // Some example entities for testing
     for (unsigned int i = 0; i < worldMap.Rooms.size(); ++i){
         sfray::Entity* ent = new sfray::Entity();
         ent->setTextureUID((rand() % 2 == 0 ? 4 : 5));
@@ -61,6 +55,9 @@ int main(int, char const**)
                          worldMap.Rooms[i].y + worldMap.Rooms[i].height / 2);
         worldMap.addEntity(ent);
     }
+
+    // Create the raycaster instance
+    sfray::Raycaster raycaster;
 
     // Set the map for the raycaster
     raycaster.setMap(worldMap);
