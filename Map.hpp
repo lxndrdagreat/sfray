@@ -30,11 +30,11 @@ namespace sfray {
     
     class Map {
     private:
-        std::vector<std::vector<MapTile> > _data;
-        std::map<int,sf::Texture> _textures;
+        std::vector<std::vector<MapTile> > mData;
+        std::map<int,sf::Texture> mTextures;
 		std::map<int, std::vector<sf::Color>> mTexturePixelData;
-        int _width;
-        int _height;
+        int mWidth;
+        int mHeight;
 		
 		std::vector<sfray::Entity*> mEntities;
         
@@ -45,8 +45,8 @@ namespace sfray {
         std::vector<RoomDim> Rooms;
         
         // getters
-        int Width() { return _width; };
-        int Height() { return _height; };
+        int Width() { return mWidth; };
+        int Height() { return mHeight; };
         
         MapTile& GetTile(const unsigned int x, const unsigned int y);
         

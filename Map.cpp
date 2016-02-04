@@ -11,14 +11,14 @@
 namespace sfray {
     
     Map::Map(){
-        _width = 0;
-        _height = 0;
-        _data.clear();
+        mWidth = 0;
+        mHeight = 0;
+        mData.clear();
     }
 	
 	Map::~Map(){
-		_data.clear();
-		_textures.clear();
+		mData.clear();
+		mTextures.clear();
 		mTexturePixelData.clear();
 		Rooms.clear();
 		
@@ -30,16 +30,16 @@ namespace sfray {
     
     void Map::SetDataFromIntArray(const std::vector<std::vector<int> > data, const std::vector<std::vector<int> > tiletype){
         
-        _width = data.size();
-        _height = data[0].size();
+        mWidth = data.size();
+        mHeight = data[0].size();
     
         // clear data, jic
-        _data.clear();
+        mData.clear();
         
-        for (int x = 0; x < _width; ++x){
-            _data.push_back(std::vector<MapTile>());
+        for (int x = 0; x < mWidth; ++x){
+            mData.push_back(std::vector<MapTile>());
             
-            for (int y = 0; y < _height; ++y){
+            for (int y = 0; y < mHeight; ++y){
                 MapTile tile;
                 tile.TextureIndex = data[x][y];
                 if (tiletype[x][y] == 0){
@@ -52,26 +52,26 @@ namespace sfray {
                     tile.IsFloor = false;
                 }
                 
-                _data[x].push_back(tile);
+                mData[x].push_back(tile);
             }
         }
         
     }
     
     void Map::CreateFromBSP(const int width, const int height){
-        _width = width;
-        _height = height;
+        mWidth = width;
+        mHeight = height;
         
-        _data.clear();
+        mData.clear();
         
-        GenerationResults builtBSP = makeBSP(_width, _height);
+        GenerationResults builtBSP = makeBSP(mWidth, mHeight);
         Rooms = builtBSP.rooms;
         
-        for (int x = 0; x < _width; ++x){
-            for (int y = 0; y < _height;++y){
-                _data.push_back(std::vector<MapTile>());
+        for (int x = 0; x < mWidth; ++x){
+            for (int y = 0; y < mHeight; ++y){
+                mData.push_back(std::vector<MapTile>());
                 
-                for (int y = 0; y < _height; ++y){
+                for (int y = 0; y < mHeight; ++y){
                     MapTile tile;
                     tile.TextureIndex = builtBSP.mapArray[x][y];
                     if (builtBSP.mapArray[x][y] == 0){
@@ -88,7 +88,7 @@ namespace sfray {
                         tile.IsFloor = false;
                     }
                     
-                    _data[x].push_back(tile);
+                    mData[x].push_back(tile);
                 }
 
             }
@@ -96,32 +96,32 @@ namespace sfray {
     }
     
     MapTile& Map::GetTile(const unsigned int x, const unsigned int y){
-		_data[x][y].TextureWidth = _textures[_data[x][y].TextureIndex].getSize().x;
-		_data[x][y].TextureHeight = _textures[_data[x][y].TextureIndex].getSize().y;
-        return _data[x][y];
+		mData[x][y].TextureWidth = mTextures[mData[x][y].TextureIndex].getSize().x;
+		mData[x][y].TextureHeight = mTextures[mData[x][y].TextureIndex].getSize().y;
+        return mData[x][y];
     }
     
     void Map::LoadTexture(int numeric_index, const std::string &path){
-        _textures[numeric_index] = sf::Texture();
-        if (!_textures[numeric_index].loadFromFile(path)){
+        mTextures[numeric_index] = sf::Texture();
+        if (!mTextures[numeric_index].loadFromFile(path)){
             throw "Could not load texture needed by map: '" + path + "'";
         }
 		
 		// store pixel data
-		const sf::Uint8* data = _textures[numeric_index].copyToImage().getPixelsPtr();
-		for (unsigned int i = 0; i < _textures[numeric_index].getSize().x * _textures[numeric_index].getSize().y * 4; i += 4){
+		const sf::Uint8* data = mTextures[numeric_index].copyToImage().getPixelsPtr();
+		for (unsigned int i = 0; i < mTextures[numeric_index].getSize().x * mTextures[numeric_index].getSize().y * 4; i += 4){
 			sf::Color c(data[i], data[i+1], data[i+2], data[i+3]);
 			mTexturePixelData[numeric_index].push_back(c);
 		}
-		//mTexturePixelData[numeric_index] = _textures[numeric_index].copyToImage().getPixelsPtr();
+		//mTexturePixelData[numeric_index] = mTextures[numeric_index].copyToImage().getPixelsPtr();
     }
     
     sf::Texture& Map::GetTexture(int index){
-        return _textures[index];
+        return mTextures[index];
     }
 	
 	sf::Color Map::GetPixelFromTexture(int index, int x, int y){
-		int pixel_index = y * _textures[index].getSize().x + x;
+		int pixel_index = y * mTextures[index].getSize().x + x;
 //		sf::Color c(mTexturePixelData[index][pixel_index], 
 //					mTexturePixelData[index][pixel_index+1],
 //					mTexturePixelData[index][pixel_index+2],
