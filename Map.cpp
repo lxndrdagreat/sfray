@@ -13,7 +13,6 @@ namespace sfray {
     Map::Map(){
         mWidth = 0;
         mHeight = 0;
-        mData.clear();
     }
 	
 	Map::~Map(){
@@ -28,24 +27,27 @@ namespace sfray {
 		mEntities.clear();
 	}
     
-    void Map::SetDataFromIntArray(const std::vector<std::vector<int> > data, const std::vector<std::vector<int> > tiletype){
+    void Map::SetDataFromIntArray(const std::vector<std::vector<int> > data){
         
         mWidth = data.size();
         mHeight = data[0].size();
-    
+
         // clear data, jic
         mData.clear();
         
         for (int x = 0; x < mWidth; ++x){
             mData.push_back(std::vector<MapTile>());
-            
             for (int y = 0; y < mHeight; ++y){
                 MapTile tile;
                 tile.TextureIndex = data[x][y];
-                if (tiletype[x][y] == 0){
+                if (data[x][y] == 0){
                     // floor
                     tile.IsFloor = true;
                     tile.IsWall = false;
+                    int chance = rand() % 10;
+                    if (chance <= 2){
+                        tile.TextureIndex = -1;
+                    }
                 }
                 else{
                     tile.IsWall = true;
@@ -53,44 +55,6 @@ namespace sfray {
                 }
                 
                 mData[x].push_back(tile);
-            }
-        }
-        
-    }
-    
-    void Map::CreateFromBSP(const int width, const int height){
-        mWidth = width;
-        mHeight = height;
-        
-        mData.clear();
-        
-        GenerationResults builtBSP = makeBSP(mWidth, mHeight);
-        Rooms = builtBSP.rooms;
-        
-        for (int x = 0; x < mWidth; ++x){
-            for (int y = 0; y < mHeight; ++y){
-                mData.push_back(std::vector<MapTile>());
-                
-                for (int y = 0; y < mHeight; ++y){
-                    MapTile tile;
-                    tile.TextureIndex = builtBSP.mapArray[x][y];
-                    if (builtBSP.mapArray[x][y] == 0){
-                        // floor
-                        tile.IsFloor = true;
-                        tile.IsWall = false;
-                        int chance = rand() % 10;
-                        if (chance <= 2){
-                            tile.TextureIndex = -1;
-                        }
-                    }
-                    else{
-                        tile.IsWall = true;
-                        tile.IsFloor = false;
-                    }
-                    
-                    mData[x].push_back(tile);
-                }
-
             }
         }
     }
@@ -108,12 +72,17 @@ namespace sfray {
         }
 		
 		// store pixel data
-		const sf::Uint8* data = mTextures[numeric_index].copyToImage().getPixelsPtr();
-		for (unsigned int i = 0; i < mTextures[numeric_index].getSize().x * mTextures[numeric_index].getSize().y * 4; i += 4){
-			sf::Color c(data[i], data[i+1], data[i+2], data[i+3]);
-			mTexturePixelData[numeric_index].push_back(c);
-		}
-		//mTexturePixelData[numeric_index] = mTextures[numeric_index].copyToImage().getPixelsPtr();
+        sf::Image imageCopy = mTextures[numeric_index].copyToImage();
+		const sf::Uint8* data = imageCopy.getPixelsPtr();
+        if (data == nullptr){
+            throw "Could not get pixel data from image.";
+        }
+        unsigned int textureWidth = mTextures[numeric_index].getSize().x;
+        unsigned int textureHeight = mTextures[numeric_index].getSize().y;
+		for (unsigned int i = 0; i < textureWidth*textureHeight*4; i += 4) {
+            sf::Color c(data[i], data[i + 1], data[i + 2], data[i + 3]);
+            mTexturePixelData[numeric_index].push_back(c);
+        }
     }
     
     sf::Texture& Map::GetTexture(int index){

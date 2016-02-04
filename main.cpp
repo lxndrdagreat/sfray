@@ -17,8 +17,6 @@
 
 #define MAP_WIDTH 50
 #define MAP_HEIGHT 50
-#define TEXTURE_WIDTH 64
-#define TEXTURE_HEIGHT 64
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
 
@@ -29,8 +27,13 @@ int gfx_height = WINDOW_HEIGHT;
 int main(int, char const**)
 {
     srand(1); // using a seed to help debug changes
+
+    // Create the map. For this example, using a BSP Generator.
     sfray::Map worldMap;
-    worldMap.CreateFromBSP(MAP_WIDTH, MAP_HEIGHT);
+
+    sfray::GenerationResults builtBSP = sfray::makeBSP(MAP_WIDTH, MAP_HEIGHT);
+    worldMap.Rooms = builtBSP.rooms;
+    worldMap.SetDataFromIntArray(builtBSP.mapArray);
 
     // Create the raycaster instance
     sfray::Raycaster raycaster;

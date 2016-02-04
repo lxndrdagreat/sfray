@@ -11,12 +11,9 @@
 
 #include <vector>
 #include <map>
-#include "BSPGenerator.h"
 #include <SFML/Graphics.hpp>
 #include "Entity.hpp"
-
-#define MAP_DEFAULT_WIDTH 50
-#define MAP_DEFAULT_HEIGHT 50
+#include "MapUtils.h"
 
 namespace sfray {
     
@@ -50,9 +47,7 @@ namespace sfray {
         
         MapTile& GetTile(const unsigned int x, const unsigned int y);
         
-        void SetDataFromIntArray(const std::vector<std::vector<int> > data, const std::vector<std::vector<int>> tiletype);
-        
-        void CreateFromBSP(const int width, const int height);
+        void SetDataFromIntArray(const std::vector<std::vector<int> > data);
         
         void LoadTexture(int numeric_index, const std::string& path);
         
