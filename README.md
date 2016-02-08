@@ -1,6 +1,28 @@
 # sfray
 Old-school FPS raycast engine written in C++11 and using SFML 2.3.
 
+Please note that this is _not_ a complete game or even really a game
+at all. This project focuses on the rendering engine for the raycasting.
+You can build off of this to add movement, combat and the other things
+that make a real game. The included example showcases how to do a few
+of these things.
+
+# Features
+
+- Ability to render walls, floors and ceilings as textures or colors
+- Rendering of sprite objects (`Entity` class)
+
+# Roadmap
+These are things I would like to explore and try to figure out, when
+I have more time available to do so.
+
+- Walls with different heights
+- Animated entities
+- Animated walls and floors/ceilings
+- More performance increases
+- More rendering methods and options to give more choices to the
+developer as to where to cut corners
+
 # Resources
 
 Check out my random Youtube videos that show sort of snapshots of the
@@ -18,9 +40,25 @@ basic idea is how this is done and what I based my version off of.
 
 # Example Program
 The example program (located in `main.cpp`) shows basic usage. I've tried to
-clean it up and add comments. You can move with the arrow keys, and cycle the
-different rendering modes for the walls, floor, ceiling and entities using
-the Z, X and C keys. Escape quits the program.
+clean it up and add comments.
+
+## Demo Features
+
+- Floor, ceiling and wall rendering methods
+- Toggle entity drawing on and off
+- Camera movement and collision
+- Overlay "gun" example (defaults to hidden, see keybindings to key to toggle
+it to visible).
+- Frames-per-second output to help debug performance gains/losses.
+
+## Keybindings
+
+- `Arrow Keys`: movement/rotation
+- `Z`: Cycle floor rendering method
+- `X`: Cycle ceiling rendering method
+- `C`: Cycle wall rendering method
+- `V`: Cycle entities on and off
+- `B`: Cycle overlay example on and off
 
 # Raycaster
 
