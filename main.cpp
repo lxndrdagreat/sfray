@@ -90,6 +90,14 @@ int main(int, char const**)
     fps_text.setColor(sf::Color::Yellow);
     fps_text.setPosition(10, 10);
 
+    sf::Texture overlayTexture;
+    overlayTexture.loadFromFile(resourcePath() + "overlay.png");
+    sf::Sprite overlaySprite(overlayTexture);
+    overlaySprite.setOrigin(0.0f, overlayTexture.getSize().y);
+    overlaySprite.setScale(2.0f, 2.0f);
+    overlaySprite.setPosition(WINDOW_WIDTH * 0.65f, WINDOW_HEIGHT + 100);
+    bool drawOverlay = false;
+
     // Start the game loop. This is the normal basics used in SFML.
     while (window.isOpen())
     {
@@ -143,6 +151,10 @@ int main(int, char const**)
                     current = 0;
                 }
                 raycaster.setEntityRenderMethod((sfray::EntityRenderMethod)current);
+            }
+            // B: toggle overlay render on/off
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::B){
+                drawOverlay = !drawOverlay;
             }
         }
 
@@ -201,6 +213,13 @@ int main(int, char const**)
 
         // RESET THE VIEW
         window.setView(window.getDefaultView());
+
+        // DRAW THE OVERLAY
+        if (drawOverlay)
+        {
+            window.draw(overlaySprite);
+        }
+
 
         // Draw the framerate counter
         fps_timer -= delta;
