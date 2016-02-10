@@ -10,26 +10,63 @@
 
 // Here is a small helper for you ! Have a look.
 #include "ResourcePath.hpp"
-#include "BSPGenerator.h"
 #include "Entity.hpp"
 #include "Raycaster.hpp"
 #include "Map.hpp"
 
-#define MAP_WIDTH 50
-#define MAP_HEIGHT 50
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
 
 int main(int, char const**)
 {
-    srand(1); // using a seed to help debug changes
+    // This example map is a large room with the different features
+    // showcased inside of it.
+    // It's dimensions are 20x20.
+    std::vector<std::vector<int>> basicLargeRoom{
+            { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+    };
 
-    // Create the map. For this example, using a BSP Generator.
+    // This map is for testing the drawing distance
+    std::vector<std::vector<int>> hugeSpace;
+    for (int x = 0; x < 50; ++x){
+        hugeSpace.push_back(std::vector<int>());
+        for (int y = 0; y < 50; ++y){
+            if (x == 0 || x == 49){
+                hugeSpace[x].push_back(1);
+            }
+            else if (y == 0 || y == 49){
+                hugeSpace[x].push_back(2);
+            }
+            else{
+                hugeSpace[x].push_back(0);
+            }
+        }
+    }
+
+    // Create the actual map object that the renderer uses
     sfray::Map worldMap;
 
-    sfray::GenerationResults builtBSP = sfray::makeBSP(MAP_WIDTH, MAP_HEIGHT);
-    worldMap.Rooms = builtBSP.rooms;
-    worldMap.SetDataFromIntArray(builtBSP.mapArray);
+    // load in the map data from above
+    worldMap.SetDataFromIntArray(basicLargeRoom);
 
     // Load textures into the map object
     worldMap.LoadTexture(1, resourcePath() + "stonewall.png");  // 128x128 version
@@ -48,11 +85,16 @@ int main(int, char const**)
 //    worldMap.LoadTexture(-1, resourcePath() + "floor2_64.png");   // 64x64 version
 
     // Some example entities for testing
-    for (unsigned int i = 0; i < worldMap.Rooms.size(); ++i){
+    for (unsigned int i = 0; i < 10; ++i){
         sfray::Entity* ent = new sfray::Entity();
         ent->setTextureUID((rand() % 2 == 0 ? 4 : 5));
-        ent->setPosition(worldMap.Rooms[i].x + worldMap.Rooms[i].width / 2,
-                         worldMap.Rooms[i].y + worldMap.Rooms[i].height / 2);
+        int x = 1 + rand() % (worldMap.Width()-2);
+        int y = 1 + rand() % (worldMap.Height()-2);
+        while(!worldMap.GetTile(x,y).IsFloor){
+            x = 1 + rand() % (worldMap.Width()-2);
+            y = 1 + rand() % (worldMap.Height()-2);
+        }
+        ent->setPosition(x, y);
         worldMap.addEntity(ent);
     }
 
@@ -62,12 +104,14 @@ int main(int, char const**)
     // Set the map for the raycaster
     raycaster.setMap(worldMap);
 
+    raycaster.setEntityRenderMethod(sfray::Entity_Texture);
+
     // Set the raycasters' drawing size
     raycaster.setSize(320, 240);
 
     // Set up the camera
     sfray::Camera camera;
-    camera.setPosition(worldMap.Rooms[0].x + 1, worldMap.Rooms[0].y + 1);
+    camera.setPosition(2, 2);
     camera.setDirectionInDegrees(0);
 
     // Create the main window
