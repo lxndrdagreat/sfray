@@ -58,7 +58,7 @@ namespace sfray {
 		sf::Color			mCeilingRenderColor;
 		sf::Color			mFloorRenderColor;
 
-		// Z Buffer and Height Map used to speed up calculations in the loop.
+		// Z Buffer and getHeight Map used to speed up calculations in the loop.
         std::vector<int> 	mZBuffer;
         std::vector<float> 	mHeightMap;
 

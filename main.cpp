@@ -66,16 +66,16 @@ int main(int, char const**)
     sfray::Map worldMap;
 
     // load in the map data from above
-    worldMap.SetDataFromIntArray(hugeSpace);
+    worldMap.setDataFromIntArray(hugeSpace);
 
     // Load textures into the map object
-    worldMap.LoadTexture(1, resourcePath() + "stonewall.png");  // 128x128 version
-    worldMap.LoadTexture(2, resourcePath() + "stonewall3.png");  // 128x128 version
-    worldMap.LoadTexture(3, resourcePath() + "stonewall4.png");  // 128x128 version
-    worldMap.LoadTexture(0, resourcePath() + "floor.png");  // 128x128 version
-    worldMap.LoadTexture(-1, resourcePath() + "floor2.png");  // 128x128 version
-    worldMap.LoadTexture(4, resourcePath() + "pillar.png");
-    worldMap.LoadTexture(5, resourcePath() + "barrel.png");
+    worldMap.loadTexture(1, resourcePath() + "stonewall.png");  // 128x128 version
+    worldMap.loadTexture(2, resourcePath() + "stonewall3.png");  // 128x128 version
+    worldMap.loadTexture(3, resourcePath() + "stonewall4.png");  // 128x128 version
+    worldMap.loadTexture(0, resourcePath() + "floor.png");  // 128x128 version
+    worldMap.loadTexture(-1, resourcePath() + "floor2.png");  // 128x128 version
+    worldMap.loadTexture(4, resourcePath() + "pillar.png");
+    worldMap.loadTexture(5, resourcePath() + "barrel.png");
 
     // These are lower-quality (and size) versions of the wall and floor textures.
 //	worldMap.LoadTexture(1, resourcePath() + "stonewall_64.png");   // 64x64 version
@@ -88,11 +88,11 @@ int main(int, char const**)
     for (unsigned int i = 0; i < 10; ++i){
         sfray::Entity* ent = new sfray::Entity();
         ent->setTextureUID((rand() % 2 == 0 ? 4 : 5));
-        int x = 1 + rand() % (worldMap.Width()-2);
-        int y = 1 + rand() % (worldMap.Height()-2);
-        while(!worldMap.GetTile(x,y).IsFloor){
-            x = 1 + rand() % (worldMap.Width()-2);
-            y = 1 + rand() % (worldMap.Height()-2);
+        int x = 1 + rand() % (worldMap.getWidth() - 2);
+        int y = 1 + rand() % (worldMap.getHeight() - 2);
+        while(!worldMap.getTile(x, y).IsFloor){
+            x = 1 + rand() % (worldMap.getWidth() - 2);
+            y = 1 + rand() % (worldMap.getHeight() - 2);
         }
         ent->setPosition(x, y);
         worldMap.addEntity(ent);
@@ -237,10 +237,12 @@ int main(int, char const**)
             // move camera forwards
             camera.moved = true;
             sf::Vector2f pos = camera.getPosition();
-            if (worldMap.GetTile(int(camera.getPosition().x + camera.getDirection().x * moveCheck),int(camera.getPosition().y)).IsWall == false){
+            if (worldMap.getTile(int(camera.getPosition().x + camera.getDirection().x * moveCheck),
+                                 int(camera.getPosition().y)).IsWall == false){
                 pos.x += camera.getDirection().x * moveSpeed;
             }
-            if (worldMap.GetTile(int(camera.getPosition().x),int(camera.getPosition().y + camera.getDirection().y * moveCheck)).IsWall == false){
+            if (worldMap.getTile(int(camera.getPosition().x),
+                                 int(camera.getPosition().y + camera.getDirection().y * moveCheck)).IsWall == false){
                 pos.y += camera.getDirection().y * moveSpeed;
             }
             camera.setPosition(pos);
@@ -249,10 +251,12 @@ int main(int, char const**)
             // move camera backwards
             camera.moved = true;
             sf::Vector2f pos = camera.getPosition();
-            if (worldMap.GetTile(int(camera.getPosition().x - camera.getDirection().x * moveCheck),int(camera.getPosition().y)).IsWall == false){
+            if (worldMap.getTile(int(camera.getPosition().x - camera.getDirection().x * moveCheck),
+                                 int(camera.getPosition().y)).IsWall == false){
                 pos.x -= camera.getDirection().x * moveSpeed;
             }
-            if (worldMap.GetTile(int(camera.getPosition().x),int(camera.getPosition().y - camera.getDirection().y * moveCheck)).IsWall == false){
+            if (worldMap.getTile(int(camera.getPosition().x),
+                                 int(camera.getPosition().y - camera.getDirection().y * moveCheck)).IsWall == false){
                 pos.y -= camera.getDirection().y * moveSpeed;
             }
             camera.setPosition(pos);

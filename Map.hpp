@@ -42,17 +42,17 @@ namespace sfray {
         std::vector<RoomDim> Rooms;
         
         // getters
-        int Width() { return mWidth; };
-        int Height() { return mHeight; };
+        int getWidth() { return mWidth; };
+        int getHeight() { return mHeight; };
         
-        MapTile& GetTile(const unsigned int x, const unsigned int y);
+        MapTile& getTile(const unsigned int x, const unsigned int y);
         
-        void SetDataFromIntArray(const std::vector<std::vector<int> > data);
+        void setDataFromIntArray(const std::vector<std::vector<int> > data);
         
-        void LoadTexture(int numeric_index, const std::string& path);
+        void loadTexture(int numeric_index, const std::string &path);
         
-        sf::Texture& GetTexture(int index);
-		sf::Color GetPixelFromTexture(int index, int x, int y);
+        sf::Texture&getTexture(int index);
+		sf::Color getPixelFromTexture(int index, int x, int y);
 		
 		std::vector<sfray::Entity*> getEntities();
 		void addEntity(sfray::Entity* entity);

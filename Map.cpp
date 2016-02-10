@@ -27,7 +27,7 @@ namespace sfray {
 		mEntities.clear();
 	}
     
-    void Map::SetDataFromIntArray(const std::vector<std::vector<int> > data){
+    void Map::setDataFromIntArray(const std::vector<std::vector<int> > data){
         
         mWidth = data.size();
         mHeight = data[0].size();
@@ -59,13 +59,13 @@ namespace sfray {
         }
     }
     
-    MapTile& Map::GetTile(const unsigned int x, const unsigned int y){
+    MapTile& Map::getTile(const unsigned int x, const unsigned int y){
 		mData[x][y].TextureWidth = mTextures[mData[x][y].TextureIndex].getSize().x;
 		mData[x][y].TextureHeight = mTextures[mData[x][y].TextureIndex].getSize().y;
         return mData[x][y];
     }
     
-    void Map::LoadTexture(int numeric_index, const std::string &path){
+    void Map::loadTexture(int numeric_index, const std::string &path){
         mTextures[numeric_index] = sf::Texture();
         if (!mTextures[numeric_index].loadFromFile(path)){
             throw "Could not load texture needed by map: '" + path + "'";
@@ -85,11 +85,11 @@ namespace sfray {
         }
     }
     
-    sf::Texture& Map::GetTexture(int index){
+    sf::Texture& Map::getTexture(int index){
         return mTextures[index];
     }
 	
-	sf::Color Map::GetPixelFromTexture(int index, int x, int y){
+	sf::Color Map::getPixelFromTexture(int index, int x, int y){
 		int pixel_index = y * mTextures[index].getSize().x + x;
 //		sf::Color c(mTexturePixelData[index][pixel_index], 
 //					mTexturePixelData[index][pixel_index+1],

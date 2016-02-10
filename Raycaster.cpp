@@ -175,7 +175,7 @@ namespace sfray {
 				}
 				
 				// check if ray has hit a wall
-				if (mMap.GetTile(mapX, mapY).IsWall){
+				if (mMap.getTile(mapX, mapY).IsWall){
 					hit = 1;
 				}
 			}
@@ -200,7 +200,7 @@ namespace sfray {
             int drawEnd = lineHeight / 2 + mGfxHeight / 2;
 
             // texturing calculations
-            int texNum = mMap.GetTile(mapX, mapY).TextureIndex;
+            int texNum = mMap.getTile(mapX, mapY).TextureIndex;
 
             // calculate value of wallX
             float wallX;
@@ -213,8 +213,8 @@ namespace sfray {
             wallX -= floor((wallX));
 
             // x coordinate on the texture
-            int TEXTURE_WIDTH = mMap.GetTexture(texNum).getSize().x;
-            int TEXTURE_HEIGHT = mMap.GetTexture(texNum).getSize().y;
+            int TEXTURE_WIDTH = mMap.getTexture(texNum).getSize().x;
+            int TEXTURE_HEIGHT = mMap.getTexture(texNum).getSize().y;
 
             int texX = int(wallX * float(TEXTURE_WIDTH));
             if (side == 0 && rayDirX > 0) {
@@ -244,7 +244,7 @@ namespace sfray {
                     slice[2].texCoords = sf::Vector2f(texX + 1, TEXTURE_HEIGHT);
                     slice[3].texCoords = sf::Vector2f(texX, TEXTURE_HEIGHT);
 
-                    window.draw(slice, &mMap.GetTexture(texNum));
+                    window.draw(slice, &mMap.getTexture(texNum));
                 }
                 else if (mWallRenderMethod == Wall_Color) {
                     sf::VertexArray slice(sf::Quads, 4);
@@ -345,7 +345,7 @@ namespace sfray {
                     if (distanceToFloorTile > mMaxFloorRenderDistance){
                         continue;
                     }
-                    sfray::MapTile tile = mMap.GetTile(int(currentFloorX), int(currentFloorY));
+                    sfray::MapTile tile = mMap.getTile(int(currentFloorX), int(currentFloorY));
 
                     int floorTextureWidth = tile.TextureWidth;
                     int floorTextureHeight = tile.TextureHeight;
@@ -353,7 +353,7 @@ namespace sfray {
                     int floorTexX = int(currentFloorX * floorTextureWidth) % floorTextureWidth;
                     int floorTexY = int(currentFloorY * floorTextureHeight) % floorTextureHeight;
 
-                    sf::Color pix = mMap.GetPixelFromTexture(tile.TextureIndex, floorTexX, floorTexY);
+                    sf::Color pix = mMap.getPixelFromTexture(tile.TextureIndex, floorTexX, floorTexY);
 
                     if (mFloorRenderMethod == Floor_Texture){
                         unsigned int index = (y * (mGfxWidth * 4)) + (x*4);
@@ -448,7 +448,7 @@ namespace sfray {
                 int drawOrigStartX = drawStartX;
 
                 // draws vertical slices, iterating through x.
-                sf::Texture spriteTexture = mMap.GetTexture(sprites[mSpriteOrder[i]]->getTextureUID());
+                sf::Texture spriteTexture = mMap.getTexture(sprites[mSpriteOrder[i]]->getTextureUID());
                 int TEXTURE_WIDTH = spriteTexture.getSize().x;
                 int TEXTURE_HEIGHT = spriteTexture.getSize().y;
 
