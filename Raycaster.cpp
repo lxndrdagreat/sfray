@@ -20,6 +20,7 @@ namespace sfray {
 		mWallRenderMethod = Wall_Texture;
 		mFloorRenderMethod = Floor_Texture;
 		mCeilingRenderMethod = Ceiling_Texture;
+        mEntityRenderMethod = Entity_Texture;
 		
 		// these distances will never change, so store them once to remove computation and division later.
 		for (int i = 0; i < height_; ++i){

@@ -66,7 +66,7 @@ int main(int, char const**)
     sfray::Map worldMap;
 
     // load in the map data from above
-    worldMap.SetDataFromIntArray(basicLargeRoom);
+    worldMap.SetDataFromIntArray(hugeSpace);
 
     // Load textures into the map object
     worldMap.LoadTexture(1, resourcePath() + "stonewall.png");  // 128x128 version
@@ -104,9 +104,20 @@ int main(int, char const**)
     // Set the map for the raycaster
     raycaster.setMap(worldMap);
 
-    raycaster.setEntityRenderMethod(sfray::Entity_Texture);
+    // Let's make the floor and ceiling slightly different colors
+    raycaster.setFloorRenderColor(sf::Color(50, 50, 50));
+    raycaster.setCeilingRenderColor(sf::Color(80, 80, 80));
 
-    // Set the raycasters' drawing size
+    // Max Object Render Distance
+    // Change this to change how close entities have to be
+    // to the camera in order to be drawn to the screen.
+    // The default is an absurdly high number, since there
+    // is not a major performance hit drawing the sprites.
+    // However, they do not really look good at a far distance,
+    // so you will probably want to change this to meet your needs.
+    raycaster.setMaxObjectRenderDistance(100);
+
+    // Set the raycaster engine's drawing size
     raycaster.setSize(320, 240);
 
     // Set up the camera
