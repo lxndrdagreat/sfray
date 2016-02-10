@@ -35,7 +35,8 @@ namespace sfray {
 		mFloorcastingTexture.create(mGfxWidth, mGfxHeight);
 		mFloorcastingSprite.setTexture(mFloorcastingTexture);
 		
-		
+		mMaxWallRenderDistance = 1000.0f;
+        mMaxFloorRenderDistance = 10000.0f;
 		mMaxObjectRenderDistance = 1000.0f;
 		
 		mCeilingRenderColor = sf::Color::Black;
@@ -132,7 +133,7 @@ namespace sfray {
 			float deltaDistX = sqrtf(1 + (rayDirY * rayDirY) / (rayDirX * rayDirX));
 			float deltaDistY = sqrtf(1 + (rayDirX * rayDirX) / (rayDirY * rayDirY));
 			float perpWallDist;
-			
+
 			// what direction to step in x or y-direction (either +1 or -1)
 			int stepX = 0;
 			int stepY = 0;
@@ -185,39 +186,42 @@ namespace sfray {
 			else{
 				perpWallDist = fabs((float(mapY) - rayPosY + float(1 - stepY) / 2.0) / rayDirY);
 			}
-			
-			// calculate height of line to draw on screen
-			int lineHeight = abs(int(mGfxHeight / perpWallDist));
-			
-			// calculate lowest and highest pixel to fill in current stripe
-			int drawStart = -lineHeight / 2 + mGfxHeight / 2;
-			int drawEnd = lineHeight / 2 + mGfxHeight / 2;
-			
-			// texturing calculations
-			int texNum = mMap.GetTile(mapX, mapY).TextureIndex;
-			
-			// calculate value of wallX
-			float wallX;
-			if (side == 1){
-				wallX = rayPosX + ((mapY - rayPosY + (1 - stepY) / 2) / rayDirY) * rayDirX;
-			}
-			else{
-				wallX = rayPosY + ((mapX - rayPosX + (1 - stepX) / 2) / rayDirX) * rayDirY;
-			}
-			wallX -= floor((wallX));
-			
-			// x coordinate on the texture
-			int TEXTURE_WIDTH = mMap.GetTexture(texNum).getSize().x;
-			int TEXTURE_HEIGHT = mMap.GetTexture(texNum).getSize().y;
-			
-			int texX = int(wallX * float(TEXTURE_WIDTH));
-			if (side == 0 && rayDirX > 0){
-				texX = TEXTURE_WIDTH - texX - 1;
-			}
-			if (side == 1 && rayDirY < 0)
-			{
-				texX = TEXTURE_WIDTH - texX - 1;
-			}
+
+            // we save this for later. To be used for drawing things
+            // like sprites.
+            mZBuffer[x] = perpWallDist; // perpendicular distance is used
+
+            // calculate height of line to draw on screen
+            int lineHeight = abs(int(mGfxHeight / perpWallDist));
+
+            // calculate lowest and highest pixel to fill in current stripe
+            int drawStart = -lineHeight / 2 + mGfxHeight / 2;
+            int drawEnd = lineHeight / 2 + mGfxHeight / 2;
+
+            // texturing calculations
+            int texNum = mMap.GetTile(mapX, mapY).TextureIndex;
+
+            // calculate value of wallX
+            float wallX;
+            if (side == 1) {
+                wallX = rayPosX + ((mapY - rayPosY + (1 - stepY) / 2) / rayDirY) * rayDirX;
+            }
+            else {
+                wallX = rayPosY + ((mapX - rayPosX + (1 - stepX) / 2) / rayDirX) * rayDirY;
+            }
+            wallX -= floor((wallX));
+
+            // x coordinate on the texture
+            int TEXTURE_WIDTH = mMap.GetTexture(texNum).getSize().x;
+            int TEXTURE_HEIGHT = mMap.GetTexture(texNum).getSize().y;
+
+            int texX = int(wallX * float(TEXTURE_WIDTH));
+            if (side == 0 && rayDirX > 0) {
+                texX = TEXTURE_WIDTH - texX - 1;
+            }
+            if (side == 1 && rayDirY < 0) {
+                texX = TEXTURE_WIDTH - texX - 1;
+            }
 
             /* Draw the slice of wall to the screen.
              *
@@ -226,46 +230,44 @@ namespace sfray {
              * to draw each pixel one at a time, which boosts our
              * performance.
              */
-			if (mWallRenderMethod == Wall_Texture){
-				sf::VertexArray slice(sf::Quads, 4);
-				slice[0].position = sf::Vector2f(x, drawStart);
-				slice[1].position = sf::Vector2f(x+1, drawStart);
-				slice[2].position = sf::Vector2f(x+1, drawEnd);
-				slice[3].position = sf::Vector2f(x, drawEnd);
-				
-				slice[0].texCoords = sf::Vector2f(texX, 0);
-				slice[1].texCoords = sf::Vector2f(texX + 1, 0);
-				slice[2].texCoords = sf::Vector2f(texX + 1, TEXTURE_HEIGHT);
-				slice[3].texCoords = sf::Vector2f(texX, TEXTURE_HEIGHT);
-				
-				window.draw(slice, &mMap.GetTexture(texNum));
-			}
-			else if (mWallRenderMethod == Wall_Color){
-				sf::VertexArray slice(sf::Quads, 4);
-				slice[0].position = sf::Vector2f(x, drawStart);
-				slice[1].position = sf::Vector2f(x+1, drawStart);
-				slice[2].position = sf::Vector2f(x+1, drawEnd);
-				slice[3].position = sf::Vector2f(x, drawEnd);
-				
-				sf::Color wallColor = mWallRenderColor;
-				
-				if (side == 1){
-					wallColor.r = wallColor.r / 2;
-					wallColor.g = wallColor.g / 2;
-					wallColor.b = wallColor.b / 2;
-				}
-				
-				slice[0].color = wallColor;
-				slice[1].color = wallColor;
-				slice[2].color = wallColor;
-				slice[3].color = wallColor;
-				
-				window.draw(slice);
-			}
-			
-			// we save this for later. To be used for drawing things
-            // like sprites.
-			mZBuffer[x] = perpWallDist; // perpendicular distance is used
+            if (perpWallDist <= mMaxWallRenderDistance) {
+                if (mWallRenderMethod == Wall_Texture) {
+                    sf::VertexArray slice(sf::Quads, 4);
+                    slice[0].position = sf::Vector2f(x, drawStart);
+                    slice[1].position = sf::Vector2f(x + 1, drawStart);
+                    slice[2].position = sf::Vector2f(x + 1, drawEnd);
+                    slice[3].position = sf::Vector2f(x, drawEnd);
+
+                    slice[0].texCoords = sf::Vector2f(texX, 0);
+                    slice[1].texCoords = sf::Vector2f(texX + 1, 0);
+                    slice[2].texCoords = sf::Vector2f(texX + 1, TEXTURE_HEIGHT);
+                    slice[3].texCoords = sf::Vector2f(texX, TEXTURE_HEIGHT);
+
+                    window.draw(slice, &mMap.GetTexture(texNum));
+                }
+                else if (mWallRenderMethod == Wall_Color) {
+                    sf::VertexArray slice(sf::Quads, 4);
+                    slice[0].position = sf::Vector2f(x, drawStart);
+                    slice[1].position = sf::Vector2f(x + 1, drawStart);
+                    slice[2].position = sf::Vector2f(x + 1, drawEnd);
+                    slice[3].position = sf::Vector2f(x, drawEnd);
+
+                    sf::Color wallColor = mWallRenderColor;
+
+                    if (side == 1) {
+                        wallColor.r = wallColor.r * 0.5;
+                        wallColor.g = wallColor.g * 0.5;
+                        wallColor.b = wallColor.b * 0.5;
+                    }
+
+                    slice[0].color = wallColor;
+                    slice[1].color = wallColor;
+                    slice[2].color = wallColor;
+                    slice[3].color = wallColor;
+
+                    window.draw(slice);
+                }
+            }
 			
 			++times;
 
@@ -338,6 +340,10 @@ namespace sfray {
                     float currentFloorX = weight * floorXWall + (1.0 - weight) * camera.getPosition().x;
                     float currentFloorY = weight * floorYWall + (1.0 - weight) * camera.getPosition().y;
 
+                    float distanceToFloorTile = ((camera.getPosition().x - int(currentFloorX)) * (camera.getPosition().x - int(currentFloorX)) + (camera.getPosition().y - int(currentFloorY)) * (camera.getPosition().y - int(currentFloorY)));
+                    if (distanceToFloorTile > mMaxFloorRenderDistance){
+                        continue;
+                    }
                     sfray::MapTile tile = mMap.GetTile(int(currentFloorX), int(currentFloorY));
 
                     int floorTextureWidth = tile.TextureWidth;
@@ -358,9 +364,9 @@ namespace sfray {
 
                     if (mCeilingRenderMethod == Ceiling_Texture){
                         unsigned int index2 = ((mGfxHeight-y) * (mGfxWidth * 4)) + (x*4);
-                        mFloorcastingPixels[index2] = pix.r / 2;
-                        mFloorcastingPixels[index2+1] = pix.g / 2;
-                        mFloorcastingPixels[index2+2] = pix.b / 2;
+                        mFloorcastingPixels[index2] = pix.r * 0.5;
+                        mFloorcastingPixels[index2+1] = pix.g * 0.5;
+                        mFloorcastingPixels[index2+2] = pix.b * 0.5;
                         mFloorcastingPixels[index2+3] = pix.a;
                     }
                 }
@@ -633,5 +639,20 @@ namespace sfray {
         mFloorRenderColor = color;
     }
 
+    float Raycaster::getMaxWallRenderDistance() {
+        return mMaxWallRenderDistance;
+    }
+
+    void Raycaster::setMaxWallRenderDistance(float distance) {
+        mMaxWallRenderDistance = distance;
+    }
+
+    float Raycaster::getMaxFloorRenderDistance() {
+        return mMaxFloorRenderDistance;
+    }
+
+    void Raycaster::setMaxFloorRenderDistance(float distance) {
+        mMaxFloorRenderDistance = distance;
+    }
 }// end of NS
 

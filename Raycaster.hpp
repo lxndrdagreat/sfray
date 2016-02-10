@@ -49,6 +49,8 @@ namespace sfray {
 		WallRenderMethod	mWallRenderMethod;
 		FloorRenderMethod	mFloorRenderMethod;
 		CeilingRenderMethod	mCeilingRenderMethod;
+		float               mMaxWallRenderDistance;
+        float               mMaxFloorRenderDistance;
 		float				mMaxObjectRenderDistance;
 		EntityRenderMethod	mEntityRenderMethod;
 		
@@ -100,6 +102,12 @@ namespace sfray {
 		
 		float getMaxObjectRenderDistance();
 		void setMaxObjectRenderDistance(float distance);
+
+        float getMaxWallRenderDistance();
+        void setMaxWallRenderDistance(float distance);
+
+        float getMaxFloorRenderDistance();
+        void setMaxFloorRenderDistance(float distance);
 		
 		void setCeilingRenderColor(const sf::Color& color);
 		void setFloorRenderColor(const sf::Color& color);
