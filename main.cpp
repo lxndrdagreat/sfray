@@ -28,9 +28,9 @@ int main(int, char const**)
             { 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 1},
             { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
             { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-            { 1, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-            { 1, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-            { 1, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            { 1, 0, 0, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
             { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
             { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
             { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
@@ -66,23 +66,16 @@ int main(int, char const**)
     sfray::Map worldMap;
 
     // load in the map data from above
-    worldMap.setDataFromIntArray(hugeSpace);
+    worldMap.setDataFromIntArray(basicLargeRoom);
 
     // Load textures into the map object
-    worldMap.loadTexture(1, resourcePath() + "stonewall.png");  // 128x128 version
-    worldMap.loadTexture(2, resourcePath() + "stonewall3.png");  // 128x128 version
-    worldMap.loadTexture(3, resourcePath() + "stonewall4.png");  // 128x128 version
+    worldMap.loadTexture(1, resourcePath() + "wall1.png");  // 128x128 version
+    worldMap.loadTexture(2, resourcePath() + "wall2.png");  // 128x128 version
+    worldMap.loadTexture(3, resourcePath() + "wall3.png");  // 128x128 version
     worldMap.loadTexture(0, resourcePath() + "floor.png");  // 128x128 version
     worldMap.loadTexture(-1, resourcePath() + "floor2.png");  // 128x128 version
     worldMap.loadTexture(4, resourcePath() + "pillar.png");
-    worldMap.loadTexture(5, resourcePath() + "barrel.png");
-
-    // These are lower-quality (and size) versions of the wall and floor textures.
-//	worldMap.LoadTexture(1, resourcePath() + "stonewall_64.png");   // 64x64 version
-//    worldMap.LoadTexture(2, resourcePath() + "stonewall3_64.png");   // 64x64 version
-//    worldMap.LoadTexture(3, resourcePath() + "stonewall4_64.png");   // 64x64 version
-//    worldMap.LoadTexture(0, resourcePath() + "floor_64.png");   // 64x64 version
-//    worldMap.LoadTexture(-1, resourcePath() + "floor2_64.png");   // 64x64 version
+    worldMap.loadTexture(5, resourcePath() + "box.png");
 
     // Some example entities for testing
     for (unsigned int i = 0; i < 10; ++i){
@@ -118,7 +111,7 @@ int main(int, char const**)
     raycaster.setMaxObjectRenderDistance(100);
 
     // Set the raycaster engine's drawing size
-    raycaster.setSize(320, 240);
+    raycaster.setSize(640, 480);
 
     // Set up the camera
     sfray::Camera camera;
