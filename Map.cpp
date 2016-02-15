@@ -27,36 +27,16 @@ namespace sfray {
 		mEntities.clear();
 	}
     
-    void Map::setDataFromIntArray(const std::vector<std::vector<int> > data){
-        
-        mWidth = data.size();
-        mHeight = data[0].size();
-
-        // clear data, jic
-        mData.clear();
-        
-        for (int x = 0; x < mWidth; ++x){
-            mData.push_back(std::vector<MapTile>());
-            for (int y = 0; y < mHeight; ++y){
-                MapTile tile;
-                tile.setTextureIndex(data[x][y]);
-                if (data[x][y] == 0){
-                    // floor
-                    tile.setTileType(sfray::MapTileType::Floor);
-                }
-                else{
-                    tile.setTileType(sfray::MapTileType::Wall);
-                }
-                
-                mData[x].push_back(tile);
-            }
-        }
-    }
-    
     MapTile& Map::getTile(const unsigned int x, const unsigned int y){
-		mData[x][y].setTextureWidth(mTextures[mData[x][y].getTextureIndex()].getSize().x);
-		mData[x][y].setTextureHeight(mTextures[mData[x][y].getTextureIndex()].getSize().y);
-        return mData[x][y];
+        unsigned int index = y * mWidth + x;
+        return this->getTile(index);
+    }
+
+    MapTile &Map::getTile(const unsigned int index) {
+        if (index >= mData.size()){
+            throw "Map::getTile ERROR: index out of bounds.";
+        }
+        return mData[index];
     }
     
     void Map::loadTexture(int numeric_index, const std::string &path){
@@ -85,11 +65,6 @@ namespace sfray {
 	
 	sf::Color Map::getPixelFromTexture(int index, int x, int y){
 		int pixel_index = y * mTextures[index].getSize().x + x;
-//		sf::Color c(mTexturePixelData[index][pixel_index], 
-//					mTexturePixelData[index][pixel_index+1],
-//					mTexturePixelData[index][pixel_index+2],
-//					mTexturePixelData[index][pixel_index+3]);
-		
 		return mTexturePixelData[index][pixel_index];
 	}
 	
@@ -100,5 +75,29 @@ namespace sfray {
 	std::vector<sfray::Entity*> Map::getEntities(){
 		return mEntities;
 	}
-    
+
+    void Map::setDataFromIntArray(const std::vector<int> data, unsigned int width, unsigned int height) {
+        mWidth = width;
+        mHeight = height;
+
+        // clear any existing data
+        mData.clear();
+
+        for (auto& intTile : data){
+            MapTile tile;
+            tile.setTextureIndex(intTile);
+            if (intTile == 0){
+                // floor
+                tile.setTileType(sfray::MapTileType::Floor);
+            }
+            else{
+                tile.setTileType(sfray::MapTileType::Wall);
+            }
+
+            tile.setTextureWidth(mTextures[tile.getTextureIndex()].getSize().x);
+            tile.setTextureHeight(mTextures[tile.getTextureIndex()].getSize().y);
+
+            mData.push_back(tile);
+        }
+    }
 }

@@ -20,7 +20,7 @@ namespace sfray {
     
     class Map {
     private:
-        std::vector<std::vector<MapTile> > mData;
+        std::vector<MapTile> mData;
         std::map<int,sf::Texture> mTextures;
 		std::map<int, std::vector<sf::Color>> mTexturePixelData;
         int mWidth;
@@ -39,8 +39,9 @@ namespace sfray {
         int getHeight() { return mHeight; };
         
         MapTile& getTile(const unsigned int x, const unsigned int y);
+		MapTile& getTile(const unsigned int index);
         
-        void setDataFromIntArray(const std::vector<std::vector<int> > data);
+        void setDataFromIntArray(const std::vector<int> data, unsigned int width, unsigned int height);
         
         void loadTexture(int numeric_index, const std::string &path);
         
