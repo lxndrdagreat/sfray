@@ -19,7 +19,6 @@ I have more time available to do so.
 - Walls with different heights
 - Animated entities
 - Animated walls and floors/ceilings
-- More performance increases
 - More rendering methods and options to give more choices to the
 developer as to where to cut corners
 
@@ -90,5 +89,3 @@ There are different rendering "options" for walls, floor, ceiling and entities.
 
 # License
 The MIT License (MIT). See LICENSE for more info.
-
-*Art assets are not my creation nor do I claim any ownership.*
