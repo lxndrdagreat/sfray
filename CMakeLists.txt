@@ -22,7 +22,7 @@ set(SOURCE_FILES main.cpp
         Map.cpp Map.hpp
         Raycaster.cpp Raycaster.hpp
         Camera.cpp Camera.hpp
-        Entity.cpp Entity.hpp)
+        Entity.cpp Entity.hpp MapTile.cpp MapTile.hpp)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 

@@ -83,7 +83,7 @@ int main(int, char const**)
         ent->setTextureUID((rand() % 2 == 0 ? 4 : 5));
         int x = 1 + rand() % (worldMap.getWidth() - 2);
         int y = 1 + rand() % (worldMap.getHeight() - 2);
-        while(!worldMap.getTile(x, y).IsFloor){
+        while(!worldMap.getTile(x, y).isFloor()){
             x = 1 + rand() % (worldMap.getWidth() - 2);
             y = 1 + rand() % (worldMap.getHeight() - 2);
         }
@@ -231,11 +231,11 @@ int main(int, char const**)
             camera.moved = true;
             sf::Vector2f pos = camera.getPosition();
             if (worldMap.getTile(int(camera.getPosition().x + camera.getDirection().x * moveCheck),
-                                 int(camera.getPosition().y)).IsWall == false){
+                                 int(camera.getPosition().y)).isWall() == false){
                 pos.x += camera.getDirection().x * moveSpeed;
             }
             if (worldMap.getTile(int(camera.getPosition().x),
-                                 int(camera.getPosition().y + camera.getDirection().y * moveCheck)).IsWall == false){
+                                 int(camera.getPosition().y + camera.getDirection().y * moveCheck)).isWall() == false){
                 pos.y += camera.getDirection().y * moveSpeed;
             }
             camera.setPosition(pos);
@@ -245,11 +245,11 @@ int main(int, char const**)
             camera.moved = true;
             sf::Vector2f pos = camera.getPosition();
             if (worldMap.getTile(int(camera.getPosition().x - camera.getDirection().x * moveCheck),
-                                 int(camera.getPosition().y)).IsWall == false){
+                                 int(camera.getPosition().y)).isWall() == false){
                 pos.x -= camera.getDirection().x * moveSpeed;
             }
             if (worldMap.getTile(int(camera.getPosition().x),
-                                 int(camera.getPosition().y - camera.getDirection().y * moveCheck)).IsWall == false){
+                                 int(camera.getPosition().y - camera.getDirection().y * moveCheck)).isWall() == false){
                 pos.y -= camera.getDirection().y * moveSpeed;
             }
             camera.setPosition(pos);

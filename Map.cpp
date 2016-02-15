@@ -39,19 +39,13 @@ namespace sfray {
             mData.push_back(std::vector<MapTile>());
             for (int y = 0; y < mHeight; ++y){
                 MapTile tile;
-                tile.TextureIndex = data[x][y];
+                tile.setTextureIndex(data[x][y]);
                 if (data[x][y] == 0){
                     // floor
-                    tile.IsFloor = true;
-                    tile.IsWall = false;
-                    int chance = rand() % 10;
-                    if (chance <= 2){
-                        tile.TextureIndex = -1;
-                    }
+                    tile.setTileType(sfray::MapTileType::Floor);
                 }
                 else{
-                    tile.IsWall = true;
-                    tile.IsFloor = false;
+                    tile.setTileType(sfray::MapTileType::Wall);
                 }
                 
                 mData[x].push_back(tile);
@@ -60,8 +54,8 @@ namespace sfray {
     }
     
     MapTile& Map::getTile(const unsigned int x, const unsigned int y){
-		mData[x][y].TextureWidth = mTextures[mData[x][y].TextureIndex].getSize().x;
-		mData[x][y].TextureHeight = mTextures[mData[x][y].TextureIndex].getSize().y;
+		mData[x][y].setTextureWidth(mTextures[mData[x][y].getTextureIndex()].getSize().x);
+		mData[x][y].setTextureHeight(mTextures[mData[x][y].getTextureIndex()].getSize().y);
         return mData[x][y];
     }
     

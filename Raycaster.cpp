@@ -175,7 +175,7 @@ namespace sfray {
 				}
 				
 				// check if ray has hit a wall
-				if (mMap.getTile(mapX, mapY).IsWall){
+				if (mMap.getTile(mapX, mapY).isWall()){
 					hit = 1;
 				}
 			}
@@ -200,7 +200,7 @@ namespace sfray {
             int drawEnd = lineHeight / 2 + mGfxHeight / 2;
 
             // texturing calculations
-            int texNum = mMap.getTile(mapX, mapY).TextureIndex;
+            int texNum = mMap.getTile(mapX, mapY).getTextureIndex();
 
             // calculate value of wallX
             float wallX;
@@ -347,13 +347,13 @@ namespace sfray {
                     }
                     sfray::MapTile tile = mMap.getTile(int(currentFloorX), int(currentFloorY));
 
-                    int floorTextureWidth = tile.TextureWidth;
-                    int floorTextureHeight = tile.TextureHeight;
+                    int floorTextureWidth = tile.getTextureWidth();
+                    int floorTextureHeight = tile.getTextureHeight();
 
                     int floorTexX = int(currentFloorX * floorTextureWidth) % floorTextureWidth;
                     int floorTexY = int(currentFloorY * floorTextureHeight) % floorTextureHeight;
 
-                    sf::Color pix = mMap.getPixelFromTexture(tile.TextureIndex, floorTexX, floorTexY);
+                    sf::Color pix = mMap.getPixelFromTexture(tile.getTextureIndex(), floorTexX, floorTexY);
 
                     if (mFloorRenderMethod == Floor_Texture){
                         unsigned int index = (y * (mGfxWidth * 4)) + (x*4);

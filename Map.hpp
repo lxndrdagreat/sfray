@@ -14,16 +14,9 @@
 #include <SFML/Graphics.hpp>
 #include "Entity.hpp"
 #include "MapUtils.h"
+#include "MapTile.hpp"
 
 namespace sfray {
-    
-    struct MapTile{
-        int TextureIndex = 0;
-		int TextureWidth = 0;
-		int TextureHeight = 0;
-        bool IsFloor = true;
-        bool IsWall = false;
-    };
     
     class Map {
     private:
