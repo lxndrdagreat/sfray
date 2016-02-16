@@ -108,6 +108,21 @@ namespace sfray {
         }
     }
 
+    void Map::setDataFromMapTileArray(std::vector<MapTile> data, unsigned int width, unsigned int height) {
+        mWidth = width;
+        mHeight = height;
+
+        // clear any existing data
+        mData.clear();
+
+        for (auto& tile : data){
+            tile.setTextureWidth(mTextures[tile.getTextureIndex()].getSize().x);
+            tile.setTextureHeight(mTextures[tile.getTextureIndex()].getSize().y);
+
+            mData.push_back(tile);
+        }
+    }
+
     TileStoreOrder Map::getTileStoreOrder() {
         return mTileStoreOrder;
     }

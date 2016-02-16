@@ -55,7 +55,8 @@ namespace sfray {
 
         // Set map data
         void setDataFromIntArray(const std::vector<int> data, unsigned int width, unsigned int height);
-        
+        void setDataFromMapTileArray(std::vector<MapTile> data, unsigned int width, unsigned int height);
+
         void loadTexture(int numeric_index, const std::string &path);
         
         sf::Texture&getTexture(int index);
