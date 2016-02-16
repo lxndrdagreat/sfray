@@ -17,9 +17,18 @@
 #include "MapTile.hpp"
 
 namespace sfray {
-    
+
+    /* TileStoreOrder relates to how the
+     * 2D map is stored in a 1D array.
+     */
+    enum TileStoreOrder {
+        ColumnFirstOrder = 0, // x and then y
+        RowFirstOrder // y and then x
+    };
+
     class Map {
-    private:
+    protected:
+        TileStoreOrder mTileStoreOrder;
         std::vector<MapTile> mData;
         std::map<int,sf::Texture> mTextures;
 		std::map<int, std::vector<sf::Color>> mTexturePixelData;
@@ -40,7 +49,11 @@ namespace sfray {
         
         MapTile& getTile(const unsigned int x, const unsigned int y);
 		MapTile& getTile(const unsigned int index);
-        
+
+        TileStoreOrder getTileStoreOrder();
+        void            setTileStoreOrder(TileStoreOrder order);
+
+        // Set map data
         void setDataFromIntArray(const std::vector<int> data, unsigned int width, unsigned int height);
         
         void loadTexture(int numeric_index, const std::string &path);

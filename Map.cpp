@@ -13,6 +13,7 @@ namespace sfray {
     Map::Map(){
         mWidth = 0;
         mHeight = 0;
+        mTileStoreOrder = TileStoreOrder::ColumnFirstOrder;
     }
 	
 	Map::~Map(){
@@ -28,7 +29,13 @@ namespace sfray {
 	}
     
     MapTile& Map::getTile(const unsigned int x, const unsigned int y){
-        unsigned int index = y * mWidth + x;
+        unsigned int index;
+        if (mTileStoreOrder == TileStoreOrder::RowFirstOrder){
+            index = y * mWidth + x;
+        }
+        else if (mTileStoreOrder == TileStoreOrder::ColumnFirstOrder){
+            index = x * mWidth + y;
+        }
         return this->getTile(index);
     }
 
@@ -99,5 +106,13 @@ namespace sfray {
 
             mData.push_back(tile);
         }
+    }
+
+    TileStoreOrder Map::getTileStoreOrder() {
+        return mTileStoreOrder;
+    }
+
+    void Map::setTileStoreOrder(TileStoreOrder order) {
+        mTileStoreOrder = order;
     }
 }
