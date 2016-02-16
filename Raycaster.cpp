@@ -97,180 +97,84 @@ namespace sfray {
 			window.draw(ceilshape);
 		}
 
-        /* SECOND STEP:
-         * Raycasting.
-         * Now we start doing our raycasting, taking vertical slices across
-         * the width of our drawing area.
-         *
-         * For each slice, we cast a ray from the camera to find out if and
-         * where it hits a wall. We then calculate the distance and
-         * perspective for that part of the wall. If we are using a texture,
-         * we use this to figure out what part of the texture to draw. For
-         * both textured and colored walls, we also figure out how "big" to
-         * draw this slice of the wall based on distance away.
-         */
-		for (unsigned int x = 0; x < mGfxWidth; ++x){
-
+        // FLOOR
+        for (unsigned int x = 0; x < mGfxWidth; ++x){
             /* We start by figuring out where our camera is located
              * and where it is looking.
              */
-			float cameraX = 2 * x / float(mGfxWidth) - 1;
-			
-			float rayPosX = camera.getPosition().x;
-			float rayPosY = camera.getPosition().y;
-			
-			float rayDirX = camera.getDirection().x + camera.getPlane().x * cameraX;
-			float rayDirY = camera.getDirection().y + camera.getPlane().y * cameraX;
-			
-			//which box of the map we're in
-			int mapX = int(rayPosX);
-			int mapY = int(rayPosY);
-			
-			// length of ray from current position to next x or y-side
-			float sideDistX = 0.0;
-			float sideDistY = 0.0;
-			
-			// length of ray from one x or y-side to next x or y-side
-			float deltaDistX = sqrtf(1 + (rayDirY * rayDirY) / (rayDirX * rayDirX));
-			float deltaDistY = sqrtf(1 + (rayDirX * rayDirX) / (rayDirY * rayDirY));
-			float perpWallDist;
+            float cameraX = 2 * x / float(mGfxWidth) - 1;
 
-			// what direction to step in x or y-direction (either +1 or -1)
-			int stepX = 0;
-			int stepY = 0;
-			
-			int hit = 0;
-			int side;
-			
-			if (rayDirX < 0){
-				stepX = -1;
-				sideDistX = (rayPosX - mapX) * deltaDistX;
-			}
-			else{
-				stepX = 1;
-				sideDistX = (mapX + 1.0 - rayPosX) * deltaDistX;
-			}
-			
-			if (rayDirY < 0){
-				stepY = -1;
-				sideDistY = (rayPosY - mapY) * deltaDistY;
-			}
-			else{
-				stepY = 1;
-				sideDistY = (mapY + 1.0 - rayPosY) * deltaDistY;
-			}
-			
-			// perform DDA
-			while (hit == 0){
-				// jump to next map square, OR in x-direction OR in y-direction
-				if (sideDistX < sideDistY){
-					sideDistX += deltaDistX;
-					mapX += stepX;
-					side = 0;
-				}
-				else{
-					sideDistY += deltaDistY;
-					mapY += stepY;
-					side = 1;
-				}
-				
-				// check if ray has hit a wall
-				if (mMap.getTile(mapX, mapY).isWall()){
-					hit = 1;
-				}
-			}
-			
-			// calculate distance projected on camera direction
-			if (side == 0){
-				perpWallDist = fabs((float(mapX) - rayPosX + float(1 - stepX) / 2.0) / rayDirX);
-			}
-			else{
-				perpWallDist = fabs((float(mapY) - rayPosY + float(1 - stepY) / 2.0) / rayDirY);
-			}
+            float rayPosX = camera.getPosition().x;
+            float rayPosY = camera.getPosition().y;
 
-            // we save this for later. To be used for drawing things
-            // like sprites.
-            mZBuffer[x] = perpWallDist; // perpendicular distance is used
+            float rayDirX = camera.getDirection().x + camera.getPlane().x * cameraX;
+            float rayDirY = camera.getDirection().y + camera.getPlane().y * cameraX;
 
-            // calculate height of line to draw on screen
-            int lineHeight = abs(int(mGfxHeight / perpWallDist));
+            //which box of the map we're in
+            int mapX = int(rayPosX);
+            int mapY = int(rayPosY);
 
-            // calculate lowest and highest pixel to fill in current stripe
-            int drawStart = -lineHeight / 2 + mGfxHeight / 2;
-            int drawEnd = lineHeight / 2 + mGfxHeight / 2;
+            // length of ray from current position to next x or y-side
+            float sideDistX = 0.0;
+            float sideDistY = 0.0;
 
-            // texturing calculations
-            int texNum = mMap.getTile(mapX, mapY).getTextureIndex();
+            // length of ray from one x or y-side to next x or y-side
+            float deltaDistX = sqrtf(1 + (rayDirY * rayDirY) / (rayDirX * rayDirX));
+            float deltaDistY = sqrtf(1 + (rayDirX * rayDirX) / (rayDirY * rayDirY));
+            float perpWallDist;
 
-            // calculate value of wallX
-            float wallX;
-            if (side == 1) {
-                wallX = rayPosX + ((mapY - rayPosY + (1 - stepY) / 2) / rayDirY) * rayDirX;
+            // what direction to step in x or y-direction (either +1 or -1)
+            int stepX = 0;
+            int stepY = 0;
+
+            int hit = 0;
+            int side;
+
+            if (rayDirX < 0){
+                stepX = -1;
+                sideDistX = (rayPosX - mapX) * deltaDistX;
             }
-            else {
-                wallX = rayPosY + ((mapX - rayPosX + (1 - stepX) / 2) / rayDirX) * rayDirY;
-            }
-            wallX -= floor((wallX));
-
-            // x coordinate on the texture
-            int TEXTURE_WIDTH = mMap.getTexture(texNum).getSize().x;
-            int TEXTURE_HEIGHT = mMap.getTexture(texNum).getSize().y;
-
-            int texX = int(wallX * float(TEXTURE_WIDTH));
-            if (side == 0 && rayDirX > 0) {
-                texX = TEXTURE_WIDTH - texX - 1;
-            }
-            if (side == 1 && rayDirY < 0) {
-                texX = TEXTURE_WIDTH - texX - 1;
+            else{
+                stepX = 1;
+                sideDistX = (mapX + 1.0f - rayPosX) * deltaDistX;
             }
 
-            /* Draw the slice of wall to the screen.
-             *
-             * Use a Quad sf::VertexArray to do the drawing.
-             * This gives more flexibility and keeps from having
-             * to draw each pixel one at a time, which boosts our
-             * performance.
-             */
-            if (perpWallDist <= mMaxWallRenderDistance) {
-                if (mWallRenderMethod == Wall_Texture) {
-                    sf::VertexArray slice(sf::Quads, 4);
-                    slice[0].position = sf::Vector2f(x, drawStart);
-                    slice[1].position = sf::Vector2f(x + 1, drawStart);
-                    slice[2].position = sf::Vector2f(x + 1, drawEnd);
-                    slice[3].position = sf::Vector2f(x, drawEnd);
+            if (rayDirY < 0){
+                stepY = -1;
+                sideDistY = (rayPosY - mapY) * deltaDistY;
+            }
+            else{
+                stepY = 1;
+                sideDistY = (mapY + 1.0f - rayPosY) * deltaDistY;
+            }
 
-                    slice[0].texCoords = sf::Vector2f(texX, 0);
-                    slice[1].texCoords = sf::Vector2f(texX + 1, 0);
-                    slice[2].texCoords = sf::Vector2f(texX + 1, TEXTURE_HEIGHT);
-                    slice[3].texCoords = sf::Vector2f(texX, TEXTURE_HEIGHT);
-
-                    window.draw(slice, &mMap.getTexture(texNum));
+            // perform DDA
+            while (hit == 0){
+                // jump to next map square, OR in x-direction OR in y-direction
+                if (sideDistX < sideDistY){
+                    sideDistX += deltaDistX;
+                    mapX += stepX;
+                    side = 0;
                 }
-                else if (mWallRenderMethod == Wall_Color) {
-                    sf::VertexArray slice(sf::Quads, 4);
-                    slice[0].position = sf::Vector2f(x, drawStart);
-                    slice[1].position = sf::Vector2f(x + 1, drawStart);
-                    slice[2].position = sf::Vector2f(x + 1, drawEnd);
-                    slice[3].position = sf::Vector2f(x, drawEnd);
+                else{
+                    sideDistY += deltaDistY;
+                    mapY += stepY;
+                    side = 1;
+                }
 
-                    sf::Color wallColor = mWallRenderColor;
-
-                    if (side == 1) {
-                        wallColor.r = wallColor.r * 0.5;
-                        wallColor.g = wallColor.g * 0.5;
-                        wallColor.b = wallColor.b * 0.5;
-                    }
-
-                    slice[0].color = wallColor;
-                    slice[1].color = wallColor;
-                    slice[2].color = wallColor;
-                    slice[3].color = wallColor;
-
-                    window.draw(slice);
+                // check if ray has hit a wall
+                if (mMap.getTile(mapX, mapY).isWall()){
+                    hit = 1;
                 }
             }
-			
-			++times;
+
+            // calculate distance projected on camera direction
+            if (side == 0){
+                perpWallDist = fabs((float(mapX) - rayPosX + float(1 - stepX) / 2.0) / rayDirX);
+            }
+            else{
+                perpWallDist = fabs((float(mapY) - rayPosY + float(1 - stepY) / 2.0) / rayDirY);
+            }
 
 
             /* THIRD STEP
@@ -291,23 +195,30 @@ namespace sfray {
              */
             float floorXWall;
             float floorYWall;
-
+            float floorX;
+            if (side == 1) {
+                floorX = rayPosX + ((mapY - rayPosY + (1 - stepY) / 2) / rayDirY) * rayDirX;
+            }
+            else {
+                floorX = rayPosY + ((mapX - rayPosX + (1 - stepX) / 2) / rayDirX) * rayDirY;
+            }
+            floorX -= floor(floorX);
             // 4 different wall directions possible
             if (side == 0 && rayDirX > 0){
                 floorXWall = mapX;
-                floorYWall = mapY + wallX;
+                floorYWall = mapY + floorX;
             }
             else if (side == 0 && rayDirX < 0){
-                floorXWall = mapX + 1.0;
-                floorYWall = mapY + wallX;
+                floorXWall = mapX + 1.0f;
+                floorYWall = mapY + floorX;
             }
             else if (side == 1 && rayDirY > 0){
-                floorXWall = mapX + wallX;
+                floorXWall = mapX + floorX;
                 floorYWall = mapY;
             }
             else{
-                floorXWall = mapX + wallX;
-                floorYWall = mapY + 1.0;
+                floorXWall = mapX + floorX;
+                floorYWall = mapY + 1.0f;
             }
 
             float distWall;
@@ -316,10 +227,6 @@ namespace sfray {
 
             distWall = perpWallDist;
             distPlayer = 0.0;
-
-            if (drawEnd < 0){
-                drawEnd = mGfxHeight;
-            }
 
             /* We only do all of this work if a few conditions are met:
              *
@@ -333,7 +240,7 @@ namespace sfray {
              */
             if ((mFloorRenderMethod == Floor_Texture || mCeilingRenderMethod == Ceiling_Texture) && camera.moved == true)
             {
-                for (unsigned int y = drawEnd + 1; y < mGfxHeight; ++y){
+                for (unsigned int y = mGfxHeight / 2; y < mGfxHeight; ++y){
                     currentDist = mHeightMap[y];
 
                     float weight = (currentDist - distPlayer) / (distWall - distPlayer);
@@ -343,6 +250,10 @@ namespace sfray {
 
                     float distanceToFloorTile = ((camera.getPosition().x - int(currentFloorX)) * (camera.getPosition().x - int(currentFloorX)) + (camera.getPosition().y - int(currentFloorY)) * (camera.getPosition().y - int(currentFloorY)));
                     if (distanceToFloorTile > mMaxFloorRenderDistance){
+                        continue;
+                    }
+                    if (int(currentFloorX) >= mMap.getWidth() || int(currentFloorY) >= mMap.getHeight()
+                        || int(currentFloorX) < 0 || int(currentFloorY) < 0){
                         continue;
                     }
                     sfray::MapTile tile = mMap.getTile(int(currentFloorX), int(currentFloorY));
@@ -386,6 +297,181 @@ namespace sfray {
         if (mFloorRenderMethod == Floor_Texture || mCeilingRenderMethod == Ceiling_Texture){
             window.draw(mFloorcastingSprite);
         }
+
+        /* SECOND STEP:
+         * Raycasting.
+         * Now we start doing our raycasting, taking vertical slices across
+         * the width of our drawing area.
+         *
+         * For each slice, we cast a ray from the camera to find out if and
+         * where it hits a wall. We then calculate the distance and
+         * perspective for that part of the wall. If we are using a texture,
+         * we use this to figure out what part of the texture to draw. For
+         * both textured and colored walls, we also figure out how "big" to
+         * draw this slice of the wall based on distance away.
+         */
+//		for (unsigned int x = 0; x < mGfxWidth; ++x){
+//
+//            /* We start by figuring out where our camera is located
+//             * and where it is looking.
+//             */
+//			float cameraX = 2 * x / float(mGfxWidth) - 1;
+//
+//			float rayPosX = camera.getPosition().x;
+//			float rayPosY = camera.getPosition().y;
+//
+//			float rayDirX = camera.getDirection().x + camera.getPlane().x * cameraX;
+//			float rayDirY = camera.getDirection().y + camera.getPlane().y * cameraX;
+//
+//			//which box of the map we're in
+//			int mapX = int(rayPosX);
+//			int mapY = int(rayPosY);
+//
+//			// length of ray from current position to next x or y-side
+//			float sideDistX = 0.0;
+//			float sideDistY = 0.0;
+//
+//			// length of ray from one x or y-side to next x or y-side
+//			float deltaDistX = sqrtf(1 + (rayDirY * rayDirY) / (rayDirX * rayDirX));
+//			float deltaDistY = sqrtf(1 + (rayDirX * rayDirX) / (rayDirY * rayDirY));
+//			float perpWallDist;
+//
+//			// what direction to step in x or y-direction (either +1 or -1)
+//			int stepX = 0;
+//			int stepY = 0;
+//
+//			int hit = 0;
+//			int side;
+//
+//			if (rayDirX < 0){
+//				stepX = -1;
+//				sideDistX = (rayPosX - mapX) * deltaDistX;
+//			}
+//			else{
+//				stepX = 1;
+//				sideDistX = (mapX + 1.0 - rayPosX) * deltaDistX;
+//			}
+//
+//			if (rayDirY < 0){
+//				stepY = -1;
+//				sideDistY = (rayPosY - mapY) * deltaDistY;
+//			}
+//			else{
+//				stepY = 1;
+//				sideDistY = (mapY + 1.0 - rayPosY) * deltaDistY;
+//			}
+//
+//			// perform DDA
+//			while (hit == 0){
+//				// jump to next map square, OR in x-direction OR in y-direction
+//				if (sideDistX < sideDistY){
+//					sideDistX += deltaDistX;
+//					mapX += stepX;
+//					side = 0;
+//				}
+//				else{
+//					sideDistY += deltaDistY;
+//					mapY += stepY;
+//					side = 1;
+//				}
+//
+//				// check if ray has hit a wall
+//				if (mMap.getTile(mapX, mapY).isWall()){
+//					hit = 1;
+//				}
+//			}
+//
+//			// calculate distance projected on camera direction
+//			if (side == 0){
+//				perpWallDist = fabs((float(mapX) - rayPosX + float(1 - stepX) / 2.0) / rayDirX);
+//			}
+//			else{
+//				perpWallDist = fabs((float(mapY) - rayPosY + float(1 - stepY) / 2.0) / rayDirY);
+//			}
+//
+//            // we save this for later. To be used for drawing things
+//            // like sprites.
+//            mZBuffer[x] = perpWallDist; // perpendicular distance is used
+//
+//            // calculate height of line to draw on screen
+//            int lineHeight = abs(int(mGfxHeight / perpWallDist));
+//
+//            // calculate lowest and highest pixel to fill in current stripe
+//            int drawStart = -lineHeight / 2 + mGfxHeight / 2;
+//            int drawEnd = lineHeight / 2 + mGfxHeight / 2;
+//
+//            // texturing calculations
+//            int texNum = mMap.getTile(mapX, mapY).getTextureIndex();
+//
+//            // calculate value of wallX
+//            float wallX;
+//            if (side == 1) {
+//                wallX = rayPosX + ((mapY - rayPosY + (1 - stepY) / 2) / rayDirY) * rayDirX;
+//            }
+//            else {
+//                wallX = rayPosY + ((mapX - rayPosX + (1 - stepX) / 2) / rayDirX) * rayDirY;
+//            }
+//            wallX -= floor((wallX));
+//
+//            // x coordinate on the texture
+//            int TEXTURE_WIDTH = mMap.getTexture(texNum).getSize().x;
+//            int TEXTURE_HEIGHT = mMap.getTexture(texNum).getSize().y;
+//
+//            int texX = int(wallX * float(TEXTURE_WIDTH));
+//            if (side == 0 && rayDirX > 0) {
+//                texX = TEXTURE_WIDTH - texX - 1;
+//            }
+//            if (side == 1 && rayDirY < 0) {
+//                texX = TEXTURE_WIDTH - texX - 1;
+//            }
+//
+//            /* Draw the slice of wall to the screen.
+//             *
+//             * Use a Quad sf::VertexArray to do the drawing.
+//             * This gives more flexibility and keeps from having
+//             * to draw each pixel one at a time, which boosts our
+//             * performance.
+//             */
+//            if (perpWallDist <= mMaxWallRenderDistance) {
+//                if (mWallRenderMethod == Wall_Texture) {
+//                    sf::VertexArray slice(sf::Quads, 4);
+//                    slice[0].position = sf::Vector2f(x, drawStart);
+//                    slice[1].position = sf::Vector2f(x + 1, drawStart);
+//                    slice[2].position = sf::Vector2f(x + 1, drawEnd);
+//                    slice[3].position = sf::Vector2f(x, drawEnd);
+//
+//                    slice[0].texCoords = sf::Vector2f(texX, 0);
+//                    slice[1].texCoords = sf::Vector2f(texX + 1, 0);
+//                    slice[2].texCoords = sf::Vector2f(texX + 1, TEXTURE_HEIGHT);
+//                    slice[3].texCoords = sf::Vector2f(texX, TEXTURE_HEIGHT);
+//
+//                    window.draw(slice, &mMap.getTexture(texNum));
+//                }
+//                else if (mWallRenderMethod == Wall_Color) {
+//                    sf::VertexArray slice(sf::Quads, 4);
+//                    slice[0].position = sf::Vector2f(x, drawStart);
+//                    slice[1].position = sf::Vector2f(x + 1, drawStart);
+//                    slice[2].position = sf::Vector2f(x + 1, drawEnd);
+//                    slice[3].position = sf::Vector2f(x, drawEnd);
+//
+//                    sf::Color wallColor = mWallRenderColor;
+//
+//                    if (side == 1) {
+//                        wallColor.r = wallColor.r * 0.5;
+//                        wallColor.g = wallColor.g * 0.5;
+//                        wallColor.b = wallColor.b * 0.5;
+//                    }
+//
+//                    slice[0].color = wallColor;
+//                    slice[1].color = wallColor;
+//                    slice[2].color = wallColor;
+//                    slice[3].color = wallColor;
+//
+//                    window.draw(slice);
+//                }
+//            }
+//			++times;
+//        }
 
         /* STEP, THE LAST
          * In which we draw our sprite entities.

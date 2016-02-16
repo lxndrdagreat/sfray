@@ -63,6 +63,7 @@ int main(int, char const**)
             }
         }
     }
+//    mapWidth = mapHeight = 50;
 
     // Create the actual map object that the renderer uses
     sfray::Map worldMap;
