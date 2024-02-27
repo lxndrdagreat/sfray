@@ -137,7 +137,7 @@ int main(int, char const**)
     sf::Text fps_text;
     fps_text.setFont(font);
     fps_text.setCharacterSize(32);
-    fps_text.setColor(sf::Color::Yellow);
+    fps_text.setFillColor(sf::Color::Yellow);
     fps_text.setPosition(10, 10);
 
     sf::Texture overlayTexture;
