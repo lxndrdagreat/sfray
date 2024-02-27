@@ -4,7 +4,7 @@
 #include <string>
 
 static std::string resourcePath() {
-	return "";
+	return "resources/";
 }
 
 #endif

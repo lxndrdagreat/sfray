@@ -469,9 +469,11 @@ namespace sfray {
                         continue;
                     }
                     // are other walls in front
-                    if (transformY > mZBuffer[stripe]){
-                        drawStartX += 1;
-                        continue;
+                    if (stripe < mZBuffer.size()) {
+                        if (transformY > mZBuffer[stripe]) {
+                            drawStartX += 1;
+                            continue;
+                        }
                     }
 
                     break;
@@ -489,9 +491,11 @@ namespace sfray {
                         continue;
                     }
 
-                    if (transformY > mZBuffer[stripe]){
-                        drawEndX -= 1;
-                        continue;
+                    if (stripe < mZBuffer.size()) {
+                        if (transformY > mZBuffer[stripe]) {
+                            drawEndX -= 1;
+                            continue;
+                        }
                     }
 
                     break;
